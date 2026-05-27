@@ -4,6 +4,43 @@ import { products } from "../data/products.js"
 
 const router = Router()
 
+/**
+ * @openapi
+ * /api/products:
+ *   get:
+ *     summary: List products
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Filter by title or SKU (case-insensitive)
+ *       - in: query
+ *         name: sku
+ *         schema: { type: string }
+ *         description: Filter by SKU substring
+ *       - in: query
+ *         name: subCategory
+ *         schema: { type: string }
+ *         description: Exact sub-category match
+ *       - in: query
+ *         name: segment
+ *         schema: { type: string }
+ *         description: Exact segment match
+ *       - in: query
+ *         name: brand
+ *         schema: { type: string }
+ *         description: Exact brand match
+ *     responses:
+ *       200:
+ *         description: Array of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ */
 router.get("/", (req: Request, res: Response) => {
   const { search, sku, subCategory, segment, brand } = req.query as Record<string, string>
 

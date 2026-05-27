@@ -1,10 +1,12 @@
 import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
+import swaggerUi from "swagger-ui-express"
 import productsRouter from "./routes/products.js"
 import customersRouter from "./routes/customers.js"
 import pricingProfilesRouter from "./routes/pricingProfiles.js"
 import resolveRouter from "./routes/resolve.js"
+import { swaggerSpec } from "./swagger.js"
 
 dotenv.config()
 
@@ -13,6 +15,8 @@ const PORT = process.env.PORT || 4000
 
 app.use(cors({ origin: "http://localhost:5173" }))
 app.use(express.json())
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", message: "Backend is running" })
