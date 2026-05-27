@@ -65,18 +65,22 @@ function App() {
   const handleSave = useCallback(
     async (name: string, customerId: string) => {
       if (!adjustment) return
-      await savePricingProfile({
-        name,
-        customerId,
-        adjustmentType: adjustment.type,
-        adjustmentDirection: adjustment.direction,
-        adjustmentValue: adjustment.value,
-        productIds: Array.from(selectedIds),
-      })
-      toast.success('Pricing profile saved!')
-      setSelectedIds(new Set())
-      setPreviewMode(false)
-      setAdjustment(undefined)
+      try {
+        await savePricingProfile({
+          name,
+          customerId,
+          adjustmentType: adjustment.type,
+          adjustmentDirection: adjustment.direction,
+          adjustmentValue: adjustment.value,
+          productIds: Array.from(selectedIds),
+        })
+        toast.success('Pricing profile saved!')
+        setSelectedIds(new Set())
+        setPreviewMode(false)
+        setAdjustment(undefined)
+      } catch {
+        toast.error('Failed to save pricing profile')
+      }
     },
     [adjustment, selectedIds],
   )

@@ -7,6 +7,43 @@ import { resolvePrice } from "../utils/resolver.js"
 
 const router = Router()
 
+/**
+ * @openapi
+ * /api/resolve:
+ *   get:
+ *     summary: Resolve price for a customer/product pair
+ *     tags: [Resolve]
+ *     parameters:
+ *       - in: query
+ *         name: customerId
+ *         required: true
+ *         schema: { type: string }
+ *         example: cust_001
+ *       - in: query
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *         example: prod_001
+ *     responses:
+ *       200:
+ *         description: Resolved price with source profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResolveResult'
+ *       400:
+ *         description: Missing parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Customer or product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get("/", (req: Request, res: Response) => {
   const { customerId, productId } = req.query as Record<string, string>
 

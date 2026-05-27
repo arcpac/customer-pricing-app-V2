@@ -17,28 +17,36 @@ interface ProductFiltersProps {
 export function ProductFilters({ products, onFiltersChange }: ProductFiltersProps) {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [sku, setSku] = useState('')
+  const [debouncedSku, setDebouncedSku] = useState('')
   const [subCategory, setSubCategory] = useState('')
   const [segment, setSegment] = useState('')
   const [brand, setBrand] = useState('')
 
-  // Debounce search input 300ms
+  // Debounce search + sku inputs 300ms
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
     return () => clearTimeout(t)
   }, [search])
 
-  // Emit combined filters whenever any value changes (search already debounced)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSku(sku), 300)
+    return () => clearTimeout(t)
+  }, [sku])
+
+  // Emit combined filters whenever any value changes (text inputs already debounced)
   const onFiltersChangeRef = useRef(onFiltersChange)
   onFiltersChangeRef.current = onFiltersChange
 
   useEffect(() => {
     const filters: Filters = {}
     if (debouncedSearch) filters.search = debouncedSearch
+    if (debouncedSku) filters.sku = debouncedSku
     if (subCategory) filters.subCategory = subCategory
     if (segment) filters.segment = segment
     if (brand) filters.brand = brand
     onFiltersChangeRef.current(filters)
-  }, [debouncedSearch, subCategory, segment, brand])
+  }, [debouncedSearch, debouncedSku, subCategory, segment, brand])
 
   // Derive unique options from current product list
   const subCategories = [...new Set(products.map((p) => p.subCategory))].sort()
@@ -52,6 +60,12 @@ export function ProductFilters({ products, onFiltersChange }: ProductFiltersProp
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="h-8 w-52"
+      />
+      <Input
+        placeholder="SKU…"
+        value={sku}
+        onChange={(e) => setSku(e.target.value)}
+        className="h-8 w-32"
       />
 
       <FilterSelect

@@ -24,6 +24,7 @@ export interface Adjustment {
 
 export interface ProductFilters {
   search?: string
+  sku?: string
   subCategory?: string
   segment?: string
   brand?: string
