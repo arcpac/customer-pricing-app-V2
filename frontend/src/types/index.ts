@@ -16,6 +16,12 @@ export interface Customer {
 export type AdjustmentType = 'fixed' | 'percentage'
 export type AdjustmentDirection = 'increase' | 'decrease'
 
+export interface Adjustment {
+  type: AdjustmentType
+  direction: AdjustmentDirection
+  value: number
+}
+
 export interface ProductFilters {
   search?: string
   subCategory?: string
