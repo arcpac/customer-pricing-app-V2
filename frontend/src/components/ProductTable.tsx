@@ -8,14 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { AdjustmentDirection, AdjustmentType, Product } from '@/types'
+import type { Adjustment, Product } from '@/types'
 import { computeAdjustedPrice } from '@/utils/pricing'
-
-interface Adjustment {
-  type: AdjustmentType
-  direction: AdjustmentDirection
-  value: number
-}
 
 interface ProductTableProps {
   products: Product[]
