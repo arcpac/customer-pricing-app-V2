@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import productsRouter from "./routes/products.js"
 import customersRouter from "./routes/customers.js"
 import pricingProfilesRouter from "./routes/pricingProfiles.js"
+import resolveRouter from "./routes/resolve.js"
 
 dotenv.config()
 
@@ -20,6 +21,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/products", productsRouter)
 app.use("/api/customers", customersRouter)
 app.use("/api/pricing-profiles", pricingProfilesRouter)
+app.use("/api/resolve", resolveRouter)
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`)
