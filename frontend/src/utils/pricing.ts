@@ -13,5 +13,5 @@ export function computeAdjustedPrice(
     const delta = basePrice * (value / 100)
     adjusted = direction === 'increase' ? basePrice + delta : basePrice - delta
   }
-  return Math.max(0, adjusted)
+  return Math.max(0, Math.round(adjusted * 100) / 100)
 }

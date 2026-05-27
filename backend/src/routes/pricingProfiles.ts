@@ -258,4 +258,112 @@ router.post("/", (req: Request, res: Response) => {
   res.status(201).json(profile)
 })
 
+/**
+ * @openapi
+ * /api/pricing-profiles/{id}:
+ *   put:
+ *     summary: Update pricing profile name (recomputes items)
+ *     tags: [Pricing Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PricingProfile'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *   delete:
+ *     summary: Delete a pricing profile
+ *     tags: [Pricing Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       204:
+ *         description: Deleted
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put("/:id", (req: Request, res: Response) => {
+  const idx = pricingProfiles.findIndex((p) => p.id === req.params.id)
+  if (idx === -1) {
+    res.status(404).json({ error: "Profile not found" })
+    return
+  }
+
+  const { name } = req.body as { name: unknown }
+  if (!name || typeof name !== "string" || name.trim() === "") {
+    res.status(400).json({ error: "name is required" })
+    return
+  }
+
+  const existing = pricingProfiles[idx] as PricingProfile
+  const updatedItems = existing.items.map((item) => {
+    const product = products.find((p) => p.id === item.productId)
+    if (!product) return item
+    return {
+      ...item,
+      basePrice: product.basePrice,
+      adjustedPrice: computeAdjustedPrice(
+        product.basePrice,
+        existing.adjustmentType,
+        existing.adjustmentDirection,
+        existing.adjustmentValue,
+      ),
+    }
+  })
+
+  const updated: PricingProfile =
+    existing.customerScope === "individual"
+      ? existing.productFilter
+        ? { ...existing, name: name.trim(), items: updatedItems, customerId: existing.customerId!, productFilter: existing.productFilter }
+        : { ...existing, name: name.trim(), items: updatedItems, customerId: existing.customerId! }
+      : existing.productFilter
+        ? { ...existing, name: name.trim(), items: updatedItems, customerGroup: existing.customerGroup!, productFilter: existing.productFilter }
+        : { ...existing, name: name.trim(), items: updatedItems, customerGroup: existing.customerGroup! }
+  pricingProfiles[idx] = updated
+  res.json(updated)
+})
+
+router.delete("/:id", (req: Request, res: Response) => {
+  const idx = pricingProfiles.findIndex((p) => p.id === req.params.id)
+  if (idx === -1) {
+    res.status(404).json({ error: "Profile not found" })
+    return
+  }
+  pricingProfiles.splice(idx, 1)
+  res.status(204).end()
+})
+
 export default router

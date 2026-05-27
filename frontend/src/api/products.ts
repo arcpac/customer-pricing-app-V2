@@ -5,6 +5,7 @@ const BASE = 'http://localhost:4000'
 export async function getProducts(filters?: ProductFilters): Promise<Product[]> {
   const params = new URLSearchParams()
   if (filters?.search) params.set('search', filters.search)
+  if (filters?.sku) params.set('sku', filters.sku)
   if (filters?.subCategory) params.set('subCategory', filters.subCategory)
   if (filters?.segment) params.set('segment', filters.segment)
   if (filters?.brand) params.set('brand', filters.brand)
