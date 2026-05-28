@@ -136,8 +136,8 @@ router.post("/", (req: Request, res: Response) => {
     res.status(400).json({ error: "customerScope must be 'individual' or 'group'" })
     return
   }
-  if (!["fixed", "percentage"].includes(adjustmentType as string)) {
-    res.status(400).json({ error: "adjustmentType must be 'fixed' or 'percentage'" })
+  if (!["fixed", "percentage", "custom_price"].includes(adjustmentType as string)) {
+    res.status(400).json({ error: "adjustmentType must be 'fixed', 'percentage', or 'custom_price'" })
     return
   }
   if (!["increase", "decrease"].includes(adjustmentDirection as string)) {
@@ -218,7 +218,7 @@ router.post("/", (req: Request, res: Response) => {
         basePrice: product.basePrice,
         adjustedPrice: computeAdjustedPrice(
           product.basePrice,
-          adjustmentType as "fixed" | "percentage",
+          adjustmentType as "fixed" | "percentage" | "custom_price",
           adjustmentDirection as "increase" | "decrease",
           adjustmentValue as number,
         ),
@@ -337,7 +337,7 @@ router.put("/:id", (req: Request, res: Response) => {
       basePrice: product.basePrice,
       adjustedPrice: computeAdjustedPrice(
         product.basePrice,
-        existing.adjustmentType,
+        existing.adjustmentType as "fixed" | "percentage" | "custom_price",
         existing.adjustmentDirection,
         existing.adjustmentValue,
       ),

@@ -6,6 +6,7 @@ export function computeAdjustedPrice(
   direction: AdjustmentDirection,
   value: number,
 ): number {
+  if (type === 'custom_price') return Math.max(0, Math.round(value * 100) / 100)
   let adjusted: number
   if (type === 'fixed') {
     adjusted = direction === 'increase' ? basePrice + value : basePrice - value

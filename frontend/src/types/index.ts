@@ -13,7 +13,12 @@ export interface Customer {
   name: string
 }
 
-export type AdjustmentType = 'fixed' | 'percentage'
+export interface CustomerGroup {
+  id: string
+  name: string
+}
+
+export type AdjustmentType = 'fixed' | 'percentage' | 'custom_price'
 export type AdjustmentDirection = 'increase' | 'decrease'
 
 export interface Adjustment {
@@ -32,11 +37,15 @@ export interface ProductFilters {
 
 export interface PricingProfilePayload {
   name: string
-  customerId: string
+  customerScope: 'individual' | 'group'
+  customerId?: string
+  customerGroup?: string
   adjustmentType: AdjustmentType
   adjustmentDirection: AdjustmentDirection
   adjustmentValue: number
-  productIds: string[]
+  productScope: 'product' | 'explicit' | 'subCategory' | 'segment' | 'all'
+  productIds?: string[]
+  productFilter?: { subCategory?: string; segment?: string }
 }
 
 export interface PricingProfileItem {

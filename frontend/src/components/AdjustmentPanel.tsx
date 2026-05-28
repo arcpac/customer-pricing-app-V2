@@ -1,91 +1,70 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import type { Adjustment } from '@/types'
 
 interface AdjustmentPanelProps {
-  selectedCount: number
-  previewMode: boolean
-  saveDisabled: boolean
-  onPreview: (adj: Adjustment) => void
-  onSave: () => void
+  type: Adjustment['type']
+  direction: Adjustment['direction']
+  valueStr: string
+  onTypeChange: (type: Adjustment['type']) => void
+  onDirectionChange: (direction: Adjustment['direction']) => void
+  onValueChange: (v: string) => void
 }
 
 export function AdjustmentPanel({
-  selectedCount,
-  previewMode,
-  saveDisabled,
-  onPreview,
-  onSave,
+  type,
+  direction,
+  valueStr,
+  onTypeChange,
+  onDirectionChange,
+  onValueChange,
 }: AdjustmentPanelProps) {
-  const [type, setType] = useState<Adjustment['type']>('fixed')
-  const [direction, setDirection] = useState<Adjustment['direction']>('increase')
-  const [valueStr, setValueStr] = useState('')
-
-  const value = parseFloat(valueStr) || 0
-
-  const handlePreview = () => {
-    onPreview({ type, direction, value })
-  }
-
   return (
     <div className="flex flex-wrap items-end gap-3 rounded-lg border p-4 bg-muted/30">
-      {/* Type toggle */}
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Type</Label>
         <div className="flex overflow-hidden rounded-md border">
-          <ToggleBtn active={type === 'fixed'} onClick={() => setType('fixed')}>
+          <ToggleBtn active={type === 'fixed'} onClick={() => onTypeChange('fixed')}>
             Fixed $
           </ToggleBtn>
-          <ToggleBtn active={type === 'percentage'} onClick={() => setType('percentage')}>
+          <ToggleBtn active={type === 'percentage'} onClick={() => onTypeChange('percentage')}>
             Percent %
           </ToggleBtn>
-        </div>
-      </div>
-
-      {/* Direction toggle */}
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Direction</Label>
-        <div className="flex overflow-hidden rounded-md border">
-          <ToggleBtn active={direction === 'increase'} onClick={() => setDirection('increase')}>
-            Increase
-          </ToggleBtn>
-          <ToggleBtn active={direction === 'decrease'} onClick={() => setDirection('decrease')}>
-            Decrease
+          <ToggleBtn active={type === 'custom_price'} onClick={() => onTypeChange('custom_price')}>
+            Custom Price
           </ToggleBtn>
         </div>
       </div>
 
-      {/* Value input */}
+      {type !== 'custom_price' && (
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Direction</Label>
+          <div className="flex overflow-hidden rounded-md border">
+            <ToggleBtn active={direction === 'increase'} onClick={() => onDirectionChange('increase')}>
+              Increase
+            </ToggleBtn>
+            <ToggleBtn active={direction === 'decrease'} onClick={() => onDirectionChange('decrease')}>
+              Decrease
+            </ToggleBtn>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Value</Label>
+        <Label className="text-xs text-muted-foreground">
+          {type === 'fixed' ? 'Fixed Amount ($)' : type === 'percentage' ? 'Rate (%)' : 'Target Price ($)'}
+        </Label>
         <Input
           type="number"
           min="0"
-          step={type === 'fixed' ? '0.01' : '1'}
-          placeholder={type === 'fixed' ? '0.00' : '0'}
+          step={type === 'percentage' ? '1' : '0.01'}
+          placeholder={type === 'percentage' ? '0' : '0.00'}
           value={valueStr}
-          onChange={(e) => setValueStr(e.target.value)}
+          onChange={(e) => onValueChange(e.target.value)}
           className="h-8 w-28"
         />
       </div>
-
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={selectedCount === 0 || value <= 0}
-        onClick={handlePreview}
-      >
-        Preview
-      </Button>
-
-      {previewMode && (
-        <Button size="sm" disabled={saveDisabled || selectedCount === 0} onClick={onSave}>
-          Save Profile
-        </Button>
-      )}
     </div>
   )
 }

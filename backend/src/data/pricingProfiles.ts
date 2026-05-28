@@ -19,7 +19,7 @@ export interface PricingProfile {
   customerScope: CustomerScope
   customerId?: string
   customerGroup?: string
-  adjustmentType: "fixed" | "percentage"
+  adjustmentType: "fixed" | "percentage" | "custom_price"
   adjustmentDirection: "increase" | "decrease"
   adjustmentValue: number
   productScope: ProductScope
@@ -71,9 +71,9 @@ export const pricingProfiles: PricingProfile[] = [
     name: "Profile C — Koyama $95 (Bondi Cellars)",
     customerScope: "individual",
     customerId: "cust_006",
-    adjustmentType: "fixed",
+    adjustmentType: "custom_price",
     adjustmentDirection: "decrease",
-    adjustmentValue: 25,
+    adjustmentValue: 95,
     productScope: "product",
     productFilter: { productId: "prod_001" },
     items: [

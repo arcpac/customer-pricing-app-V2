@@ -1,5 +1,4 @@
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -8,23 +7,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Adjustment, Product } from '@/types'
-import { computeAdjustedPrice } from '@/utils/pricing'
+import type { Product } from '@/types'
 
 interface ProductTableProps {
   products: Product[]
   selectedIds: Set<string>
   onSelectionChange: (ids: Set<string>) => void
-  previewMode?: boolean
-  adjustment?: Adjustment
 }
 
 export function ProductTable({
   products,
   selectedIds,
   onSelectionChange,
-  previewMode = false,
-  adjustment,
 }: ProductTableProps) {
   const allSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id))
   const someSelected = products.some((p) => selectedIds.has(p.id))
@@ -73,16 +67,13 @@ export function ProductTable({
             <TableHead>Segment</TableHead>
             <TableHead>Brand</TableHead>
             <TableHead className="text-right">Base Price</TableHead>
-            {previewMode && (
-              <TableHead className="text-right">New Price</TableHead>
-            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={previewMode ? 8 : 7}
+                colSpan={7}
                 className="text-center text-muted-foreground py-8 text-sm"
               >
                 No products found.
@@ -91,16 +82,6 @@ export function ProductTable({
           ) : (
             products.map((product) => {
               const isSelected = selectedIds.has(product.id)
-              const newPrice =
-                previewMode && adjustment && isSelected
-                  ? computeAdjustedPrice(
-                      product.basePrice,
-                      adjustment.type,
-                      adjustment.direction,
-                      adjustment.value,
-                    )
-                  : null
-
               return (
                 <TableRow
                   key={product.id}
@@ -121,19 +102,6 @@ export function ProductTable({
                   <TableCell className="text-muted-foreground">{product.segment}</TableCell>
                   <TableCell className="text-muted-foreground">{product.brand}</TableCell>
                   <TableCell className="text-right">${product.basePrice.toFixed(2)}</TableCell>
-                  {previewMode && (
-                    <TableCell className="text-right">
-                      {isSelected && newPrice !== null ? (
-                        newPrice === 0 ? (
-                          <Badge variant="destructive">$0.00</Badge>
-                        ) : (
-                          <span className="font-medium">${newPrice.toFixed(2)}</span>
-                        )
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  )}
                 </TableRow>
               )
             })
