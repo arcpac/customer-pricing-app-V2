@@ -321,7 +321,7 @@ export function PricingPage() {
                           </div>
                         ) : (
                           customerGroups.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
+                            <SelectItem key={c.id} value={c.name}>
                               {c.name}
                             </SelectItem>
                           ))

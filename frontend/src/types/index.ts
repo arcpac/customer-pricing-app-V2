@@ -57,10 +57,14 @@ export interface PricingProfileItem {
 export interface PricingProfile {
   id: string
   name: string
-  customerId: string
+  customerScope: 'individual' | 'group'
+  customerId?: string
+  customerGroup?: string
   adjustmentType: AdjustmentType
   adjustmentDirection: AdjustmentDirection
   adjustmentValue: number
+  productScope: 'explicit' | 'product' | 'subCategory' | 'segment' | 'all'
+  productFilter?: { productId?: string; subCategory?: string; segment?: string }
   items: PricingProfileItem[]
   createdAt: string
 }

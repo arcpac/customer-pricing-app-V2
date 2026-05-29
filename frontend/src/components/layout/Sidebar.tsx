@@ -1,7 +1,7 @@
-import { Search, Tag } from 'lucide-react'
+import { List, Search, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type Page = 'pricing' | 'resolve'
+export type Page = 'pricing' | 'resolve' | 'profiles'
 
 interface SidebarProps {
   activePage: Page
@@ -29,6 +29,9 @@ export function Sidebar({ activePage, onNavigate, className }: SidebarProps) {
         </NavBtn>
         <NavBtn active={activePage === 'resolve'} onClick={() => onNavigate('resolve')} icon={<Search size={16} />}>
           Resolve Price
+        </NavBtn>
+        <NavBtn active={activePage === 'profiles'} onClick={() => onNavigate('profiles')} icon={<List size={16} />}>
+          Pricing Profiles
         </NavBtn>
       </nav>
     </aside>
