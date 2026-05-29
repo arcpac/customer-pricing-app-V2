@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ChevronDown, ChevronRight, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +22,7 @@ import { getCustomerGroups } from '@/api/customerGroups'
 import { savePricingProfile } from '@/api/pricingProfiles'
 import { computeAdjustedPrice } from '@/utils/pricing'
 import { cn } from '@/lib/utils'
-import type { Adjustment, Customer, CustomerGroup, Product, ProductFilters as Filters } from '@/types'
+import type { Adjustment, ProductFilters as Filters } from '@/types'
 
 type CustomerScopeType = 'individual' | 'group'
 type ProductScopeType = 'one' | 'multiple' | 'all' | 'subCategory' | 'segment'
@@ -48,48 +49,61 @@ export function PricingPage() {
   const [customerScope, setCustomerScope] = useState<CustomerScopeType>('individual')
   const [customerId, setCustomerId] = useState('')
   const [customerGroupName, setCustomerGroupName] = useState('')
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [customerGroups, setCustomerGroups] = useState<CustomerGroup[]>([])
+  const [customerSelectOpen, setCustomerSelectOpen] = useState(false)
+  const [customerGroupSelectOpen, setCustomerGroupSelectOpen] = useState(false)
 
   // Product scope
   const [productScope, setProductScope] = useState<ProductScopeType>('multiple')
-  const [products, setProducts] = useState<Product[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [filters, setFilters] = useState<Filters>({})
   const [filterSubCategory, setFilterSubCategory] = useState('')
   const [filterSegment, setFilterSegment] = useState('')
-  const [loading, setLoading] = useState(false)
+
+  const STALE_MS = 3 * 60 * 1000 // sample only
+  const isExplicitScope = productScope === 'one' || productScope === 'multiple'
+
+  const { data: customers = [], isFetching: isFetchingCustomers, refetch: refetchCustomers } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+    staleTime: STALE_MS,
+    enabled: customerSelectOpen
+  })
+
+  const { data: customerGroups = [], isFetching: isFetchingCustomersGroups, refetch: refetchCustomerGroups } = useQuery({
+    queryKey: ['customerGroups'],
+    queryFn: getCustomerGroups,
+    staleTime: STALE_MS,
+    enabled: customerGroupSelectOpen
+  })
+
+  const { data: filteredProducts = [], isFetching: filteredLoading, refetch: refetchFiltered } = useQuery({
+    queryKey: ['products', filters],
+    queryFn: () => getProducts(filters),
+    enabled: isExplicitScope,
+    staleTime: STALE_MS,
+  })
+
+  const { data: allProducts = [], isFetching: catalogLoading, refetch: refetchAll } = useQuery({
+    queryKey: ['products', 'all'],
+    queryFn: () => getProducts(),
+    enabled: !isExplicitScope,
+    staleTime: STALE_MS,
+  })
+
+  const products = isExplicitScope ? filteredProducts : allProducts
+  const loading = isExplicitScope ? filteredLoading : catalogLoading
+
+  const handleRefresh = useCallback(() => {
+    refetchCustomers()
+    refetchCustomerGroups()
+    isExplicitScope ? refetchFiltered() : refetchAll()
+  }, [isExplicitScope, refetchCustomers, refetchCustomerGroups, refetchFiltered, refetchAll])
 
   // Adjustment
   const [adjustmentType, setAdjustmentType] = useState<Adjustment['type']>('fixed')
   const [adjustmentDirection, setAdjustmentDirection] = useState<Adjustment['direction']>('increase')
   const [adjustmentValueStr, setAdjustmentValueStr] = useState('')
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    getCustomers().then(setCustomers).catch(console.error)
-    getCustomerGroups().then(setCustomerGroups).catch(console.error)
-  }, [])
-
-  // Fetch products for explicit selection scopes
-  useEffect(() => {
-    if (productScope === 'all' || productScope === 'subCategory' || productScope === 'segment') return
-    setLoading(true)
-    getProducts(filters)
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [filters, productScope])
-
-  // Fetch full catalog for all/category scopes
-  useEffect(() => {
-    if (productScope !== 'all' && productScope !== 'subCategory' && productScope !== 'segment') return
-    setLoading(true)
-    getProducts()
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [productScope])
 
   const handleProductScopeChange = useCallback((next: ProductScopeType) => {
     setProductScope(next)
@@ -151,7 +165,7 @@ export function PricingPage() {
     adjustmentValue > 0 &&
     !hasZeroPrice
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     setSaving(true)
     try {
       const customerPayload =
@@ -196,11 +210,7 @@ export function PricingPage() {
     } finally {
       setSaving(false)
     }
-  }, [
-    customerScope, customerId, customerGroupName,
-    adjustmentType, adjustmentDirection, adjustmentValue,
-    productScope, selectedIds, filterSubCategory, filterSegment, profileName,
-  ])
+  }
 
   const selectedCustomerLabel =
     customerScope === 'individual'
@@ -235,6 +245,7 @@ export function PricingPage() {
                 <Input
                   placeholder="e.g. VIP Summer Discount"
                   value={profileName}
+                  type='text'
                   onChange={(e) => setProfileName(e.target.value)}
                 />
               </div>
@@ -267,28 +278,54 @@ export function PricingPage() {
                 {customerScope === 'individual' ? (
                   <>
                     <Label className="text-xs text-muted-foreground">Customer</Label>
-                    <Select value={customerId || undefined} onValueChange={(v) => setCustomerId(v ?? '')}>
+                    <Select
+                      value={customerId || undefined}
+                      onOpenChange={(open) => {
+                        setCustomerSelectOpen(open)
+                      }}
+                      onValueChange={(v) => setCustomerId(v ?? '')}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select customer…" />
                       </SelectTrigger>
                       <SelectContent>
-                        {customers.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
+                        {isFetchingCustomers && customers.length === 0 ? (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            Loading customers…
+                          </div>
+                        ) : (
+                          customers.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </>
                 ) : (
                   <>
                     <Label className="text-xs text-muted-foreground">Customer Group</Label>
-                    <Select value={customerGroupName || undefined} onValueChange={(v) => setCustomerGroupName(v ?? '')}>
+                    <Select
+                      onOpenChange={(open) => {
+                        setCustomerGroupSelectOpen(open)
+                      }}
+                      value={customerGroupName || undefined}
+                      onValueChange={(v) => setCustomerGroupName(v ?? '')}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select group…" />
                       </SelectTrigger>
                       <SelectContent>
-                        {customerGroups.map((g) => (
-                          <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
-                        ))}
+                        {isFetchingCustomersGroups && customerGroups.length === 0 ? (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            Loading groups…
+                          </div>
+                        ) : (
+                          customerGroups.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </>
@@ -301,7 +338,12 @@ export function PricingPage() {
 
       {/* Section 2: Setup Product Pricing */}
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold">Setup Product Pricing</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Setup Product Pricing</h2>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          </Button>
+        </div>
 
         {/* Product scope selector */}
         <div className="space-y-1.5">
