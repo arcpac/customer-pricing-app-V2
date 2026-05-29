@@ -18,7 +18,36 @@ API docs: http://localhost:4000/api-docs
 
 ## Precedence Rule
 
-When a customer orders a product, multiple pricing profiles may match. The system resolves a single winner using a **specificity score**:
+When a customer orders a product, multiple pricing profiles may match. The system resolves a single winner using a **specificity score**.
+
+### Algorithm
+
+1. **Filter** — keep only profiles where both the customer check and the product check pass (rules below).
+2. **Score** — `total = customerScore + productScore` (table below).
+3. **Sort** — descending by total score.
+4. **Tie-break** — equal scores: newer `createdAt` wins.
+5. **Winner** — first profile after sort.
+6. **Price** — `winner.items.find(i => i.productId === product.id).adjustedPrice`.
+7. **No match** — if filter returns empty → `{ resolvedPrice: null, message: "No pricing profile matches this customer and product" }`.
+
+### Customer matching
+
+| `customerScope` | Matches when |
+|---|---|
+| `individual` | `profile.customerId === customer.id` |
+| `group` | customer has a `CustomerGroupMembership` row for the group named `profile.customerGroup` |
+
+### Product matching
+
+| `productScope` | Matches when |
+|---|---|
+| `all` | always |
+| `explicit` | `profile.items` contains an entry with `productId === product.id` |
+| `product` | `profile.productFilter.productId === product.id` |
+| `subCategory` | `profile.productFilter.subCategory` matches `product.subCategory` (case-insensitive) |
+| `segment` | `profile.productFilter.segment` matches `product.segment` (case-insensitive) |
+
+### Scoring
 
 | Dimension | Rule | Score |
 |---|---|---|
@@ -32,6 +61,15 @@ When a customer orders a product, multiple pricing profiles may match. The syste
 **Total score = customer score + product score. Highest score wins.**
 
 Tie-break: if two profiles score equally, the newer one (by `createdAt`) wins.
+
+### Output fields
+
+| Field | Type | Description |
+|---|---|---|
+| `resolvedPrice` | `number \| null` | `item.adjustedPrice`; `null` if no profile matched |
+| `sourceProfileId` | `string` | winning profile's `id` |
+| `sourceProfileName` | `string` | winning profile's `name` |
+| `explanation` | `string` | human-readable summary including score and losing profiles |
 
 ### Rationale
 
