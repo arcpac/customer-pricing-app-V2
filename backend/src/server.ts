@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express"
 import productsRouter from "./routes/products.js"
 import customersRouter from "./routes/customers.js"
 import customerGroupsRouter from "./routes/customerGroups.js"
+import customerGroupMembershipsRouter from "./routes/customerGroupMemberships.js"
 import pricingProfilesRouter from "./routes/pricingProfiles.js"
 import resolveRouter from "./routes/resolve.js"
 import { swaggerSpec } from "./swagger.js"
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/products", productsRouter)
 app.use("/api/customers", customersRouter)
 app.use("/api/customer-groups", customerGroupsRouter)
+app.use("/api/customer-group-memberships", customerGroupMembershipsRouter)
 app.use("/api/pricing-profiles", pricingProfilesRouter)
 app.use("/api/resolve", resolveRouter)
 

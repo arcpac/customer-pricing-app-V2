@@ -18,6 +18,11 @@ export interface CustomerGroup {
   name: string
 }
 
+export interface CustomerGroupMembership {
+  customerId: string
+  customerGroupId: string
+}
+
 export type AdjustmentType = 'fixed' | 'percentage' | 'custom_price'
 export type AdjustmentDirection = 'increase' | 'decrease'
 
