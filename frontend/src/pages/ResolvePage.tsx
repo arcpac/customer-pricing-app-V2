@@ -151,6 +151,10 @@ export function ResolvePage() {
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-3 py-2.5 text-left font-medium text-sm">Product</th>
+                <th className="px-3 py-2.5 text-left font-medium text-sm">SKU</th>
+                <th className="px-3 py-2.5 text-left font-medium text-sm">Category</th>
+                <th className="px-3 py-2.5 text-left font-medium text-sm">Segment</th>
+                <th className="px-3 py-2.5 text-left font-medium text-sm">Brand</th>
                 <th className="px-3 py-2.5 text-right font-medium text-sm">Base Price</th>
                 <th className="px-3 py-2.5 text-right font-medium text-sm">Adjustment</th>
                 <th className="px-3 py-2.5 text-right font-medium text-sm">New Price</th>
@@ -161,6 +165,10 @@ export function ResolvePage() {
               {results.map((item) => (
                 <tr key={item.productId} className="hover:bg-muted/20">
                   <td className="px-3 py-2.5">{item.title}</td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{item.sku}</td>
+                  <td className="px-3 py-2.5 text-xs">{item.subCategory}</td>
+                  <td className="px-3 py-2.5 text-xs">{item.segment}</td>
+                  <td className="px-3 py-2.5 text-xs">{item.brand}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">${item.basePrice.toFixed(2)}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
                     {adjustmentLabel(item)}

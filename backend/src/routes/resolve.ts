@@ -125,14 +125,21 @@ router.get("/batch", (req: Request, res: Response) => {
       return { productId, title: null, basePrice: null, resolvedPrice: null, message: "Product not found" }
     }
     const resolved = resolvePrice(customer, product, pricingProfiles)
+    const base = {
+      productId,
+      title: product.title,
+      sku: product.sku,
+      subCategory: product.subCategory,
+      segment: product.segment,
+      brand: product.brand,
+      basePrice: product.basePrice,
+    }
     if (resolved.resolvedPrice === null) {
-      return { productId, title: product.title, basePrice: product.basePrice, ...resolved }
+      return { ...base, ...resolved }
     }
     const profile = pricingProfiles.find((p) => p.id === resolved.sourceProfileId)
     return {
-      productId,
-      title: product.title,
-      basePrice: product.basePrice,
+      ...base,
       ...resolved,
       adjustmentType: profile?.adjustmentType,
       adjustmentDirection: profile?.adjustmentDirection,

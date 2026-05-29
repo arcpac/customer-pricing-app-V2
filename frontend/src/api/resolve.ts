@@ -15,6 +15,10 @@ export interface NoMatchResult {
 export interface BatchResolveItem {
   productId: string
   title: string
+  sku: string
+  subCategory: string
+  segment: string
+  brand: string
   basePrice: number
   resolvedPrice: number | null
   sourceProfileId?: string
