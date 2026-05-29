@@ -17,19 +17,27 @@ const router = Router()
  *         description: Filter by title or SKU (case-insensitive)
  *       - in: query
  *         name: sku
- *         schema: { type: string }
- *         description: Filter by SKU substring
+ *         schema:
+ *           type: string
+ *           enum: [HGVPIN216, KOYBRUNV6, KOYNR1837, KOYRIE19, LACBNATNV6]
+ *         description: Filter by SKU
  *       - in: query
  *         name: subCategory
- *         schema: { type: string }
+ *         schema:
+ *           type: string
+ *           enum: [Wine]
  *         description: Exact sub-category match
  *       - in: query
  *         name: segment
- *         schema: { type: string }
+ *         schema:
+ *           type: string
+ *           enum: [Red, Sparkling, Port/Dessert, White]
  *         description: Exact segment match
  *       - in: query
  *         name: brand
- *         schema: { type: string }
+ *         schema:
+ *           type: string
+ *           enum: [High Garden, Koyama Wines, Lacourte-Godbillon]
  *         description: Exact brand match
  *     responses:
  *       200:
