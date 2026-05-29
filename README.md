@@ -124,3 +124,7 @@ New price is always floored at $0.00 and rounded to 2 decimal places.
 - **All Products scope**: resolved dynamically at query time — newly added products automatically fall under the profile
 - **Deleted products**: items snapshot at profile creation; resolver skips product if no longer in catalogue
 - **Tie-break**: newer profile wins, giving suppliers a natural override mechanism (create a new more-specific rule to override an old one)
+
+  # Next steps:
+Next, I would move the in-memory store to a persistent database and add stronger validation, tests, and API documentation. I would improve the pricing engine with configurable precedence, audit history, and effective dates for profiles to support more complex commercial scenarios. I would also explore AI-assisted pricing insights, such as flagging unusually aggressive discounts, margin risks, or recommending pricing adjustments based on similar customer behaviour. 
+
