@@ -165,6 +165,10 @@ export function PricingPage() {
     adjustmentValue > 0 &&
     !hasZeroPrice
 
+  const customerSelectItems = useMemo(
+    () => customers.map((c) => ({ value: c.id, label: c.name })),
+    [customers],
+  )
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -279,6 +283,7 @@ export function PricingPage() {
                   <>
                     <Label className="text-xs text-muted-foreground">Customer</Label>
                     <Select
+                      items={customerSelectItems}
                       value={customerId || undefined}
                       onOpenChange={(open) => {
                         setCustomerSelectOpen(open)

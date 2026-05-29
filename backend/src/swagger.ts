@@ -14,7 +14,7 @@ const options: swaggerJsdoc.Options = {
         Product: {
           type: "object",
           properties: {
-            id: { type: "string", example: "prod_001" },
+            id: { type: "string", example: "prod_1" },
             title: { type: "string", example: "Koyama Methode Brut Nature NV" },
             sku: { type: "string", example: "WINE-SPARK-001" },
             subCategory: { type: "string", example: "Sparkling Wine" },
@@ -28,7 +28,13 @@ const options: swaggerJsdoc.Options = {
           properties: {
             id: { type: "string", example: "cust_001" },
             name: { type: "string", example: "Bondi Cellars" },
-            groups: { type: "array", items: { type: "string" }, example: ["Independent Retailers", "VIP"] },
+          },
+        },
+        CustomerGroupMembership: {
+          type: "object",
+          properties: {
+            customerId: { type: "string", example: "cust_006" },
+            customerGroupId: { type: "string", example: "grp_001" },
           },
         },
         PricingProfileItem: {

@@ -5,6 +5,7 @@ import type { Page } from '@/components/layout/Sidebar'
 import { PricingPage } from '@/pages/PricingPage'
 import { ResolvePage } from '@/pages/ResolvePage'
 import { PricingProfilesPage } from '@/pages/PricingProfilesPage'
+import { CustomerGroupMembershipsPage } from '@/pages/CustomerGroupMembershipsPage'
 
 function App() {
   const [page, setPage] = useState<Page>('pricing')
@@ -16,6 +17,7 @@ function App() {
         {page === 'pricing' && <PricingPage />}
         {page === 'resolve' && <ResolvePage />}
         {page === 'profiles' && <PricingProfilesPage />}
+        {page === 'memberships' && <CustomerGroupMembershipsPage />}
       </main>
       <Toaster />
     </div>
