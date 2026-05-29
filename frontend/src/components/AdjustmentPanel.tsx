@@ -62,7 +62,7 @@ export function AdjustmentPanel({
           placeholder={type === 'percentage' ? '0' : '0.00'}
           value={valueStr}
           onChange={(e) => onValueChange(e.target.value)}
-          className="h-8 w-28"
+          className="h-9 w-28"
         />
       </div>
     </div>

@@ -43,6 +43,7 @@ const PRODUCT_SCOPE_LABELS: Record<ProductScopeType, string> = {
 export function PricingPage() {
   // Setup Profile
   const [setupOpen, setSetupOpen] = useState(false)
+  const [productPricingOpen, setProductPricingOpen] = useState(true)
   const [profileName, setProfileName] = useState('')
 
   // Customer scope
@@ -222,7 +223,7 @@ export function PricingPage() {
       : customerGroupName || undefined
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       {/* Section 1: Setup Profile */}
       <div className="rounded-lg border bg-card">
         <button
@@ -342,110 +343,131 @@ export function PricingPage() {
       </div>
 
       {/* Section 2: Setup Product Pricing */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Setup Product Pricing</h2>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          </Button>
-        </div>
+      <div className="rounded-lg border bg-card">
+        <button
+          type="button"
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-muted/40 transition-colors rounded-lg"
+          onClick={() => setProductPricingOpen((o) => !o)}
+        >
+          <span>Setup Product Pricing</span>
+          <div className="flex items-center gap-2">
+            {!productPricingOpen && productReady && (
+              <span className="text-xs font-normal text-muted-foreground">
+                {PRODUCT_SCOPE_LABELS[productScope]}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); handleRefresh() }}
+              disabled={loading}
+            >
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            </Button>
+            {productPricingOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+          </div>
+        </button>
 
-        {/* Product scope selector */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Product Scope</Label>
-          <div className="flex overflow-hidden rounded-md border w-fit">
-            {(Object.keys(PRODUCT_SCOPE_LABELS) as ProductScopeType[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => handleProductScopeChange(s)}
-                className={cn(
-                  'px-4 py-1.5 text-xs font-medium transition-colors',
-                  productScope === s
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-foreground hover:bg-muted',
-                )}
-              >
-                {PRODUCT_SCOPE_LABELS[s]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Product selection UI */}
-        {productScope === 'subCategory' ? (
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Sub-Category</Label>
-            <Select value={filterSubCategory || undefined} onValueChange={(v) => setFilterSubCategory(v ?? '')}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select sub-category…" />
-              </SelectTrigger>
-              <SelectContent>
-                {subCategories.map((sc) => (
-                  <SelectItem key={sc} value={sc}>{sc}</SelectItem>
+        {productPricingOpen && (
+          <div className="px-4 pb-4 pt-3 border-t space-y-4">
+            {/* Product scope selector */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Product Scope</Label>
+              <div className="flex overflow-hidden rounded-md border w-fit">
+                {(Object.keys(PRODUCT_SCOPE_LABELS) as ProductScopeType[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => handleProductScopeChange(s)}
+                    className={cn(
+                      'px-4 py-1.5 text-xs font-medium transition-colors',
+                      productScope === s
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-foreground hover:bg-muted',
+                    )}
+                  >
+                    {PRODUCT_SCOPE_LABELS[s]}
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : productScope === 'segment' ? (
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Segment</Label>
-            <Select value={filterSegment || undefined} onValueChange={(v) => setFilterSegment(v ?? '')}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select segment…" />
-              </SelectTrigger>
-              <SelectContent>
-                {segments.map((seg) => (
-                  <SelectItem key={seg} value={seg}>{seg}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : productScope === 'all' ? (
-          loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
-          ) : (
-            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-              Adjustment will apply to all {products.length} products in the catalog.
+              </div>
             </div>
-          )
-        ) : (
-          <>
-            <ProductFilters products={products} onFiltersChange={handleFiltersChange} />
-            {loading ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
+
+            {/* Product selection UI */}
+            {productScope === 'subCategory' ? (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Sub-Category</Label>
+                <Select value={filterSubCategory || undefined} onValueChange={(v) => setFilterSubCategory(v ?? '')}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Select sub-category…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subCategories.map((sc) => (
+                      <SelectItem key={sc} value={sc}>{sc}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : productScope === 'segment' ? (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Segment</Label>
+                <Select value={filterSegment || undefined} onValueChange={(v) => setFilterSegment(v ?? '')}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Select segment…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {segments.map((seg) => (
+                      <SelectItem key={seg} value={seg}>{seg}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : productScope === 'all' ? (
+              loading ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
+              ) : (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  Adjustment will apply to all {products.length} products in the catalog.
+                </div>
+              )
             ) : (
-              <ProductTable
-                products={products}
-                selectedIds={selectedIds}
-                onSelectionChange={handleSelectionChange}
+              <>
+                <ProductFilters products={products} onFiltersChange={handleFiltersChange} />
+                {loading ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
+                ) : (
+                  <ProductTable
+                    products={products}
+                    selectedIds={selectedIds}
+                    onSelectionChange={handleSelectionChange}
+                  />
+                )}
+              </>
+            )}
+
+            <AdjustmentPanel
+              type={adjustmentType}
+              direction={adjustmentDirection}
+              valueStr={adjustmentValueStr}
+              onTypeChange={setAdjustmentType}
+              onDirectionChange={setAdjustmentDirection}
+              onValueChange={setAdjustmentValueStr}
+            />
+
+            {selectedProducts.length > 0 && (
+              <PricingResultTable
+                products={selectedProducts}
+                type={adjustmentType}
+                direction={adjustmentDirection}
+                valueStr={adjustmentValueStr}
               />
             )}
-          </>
+          </div>
         )}
-
-        <AdjustmentPanel
-          type={adjustmentType}
-          direction={adjustmentDirection}
-          valueStr={adjustmentValueStr}
-          onTypeChange={setAdjustmentType}
-          onDirectionChange={setAdjustmentDirection}
-          onValueChange={setAdjustmentValueStr}
-        />
-
-        {selectedProducts.length > 0 && (
-          <PricingResultTable
-            products={selectedProducts}
-            type={adjustmentType}
-            direction={adjustmentDirection}
-            valueStr={adjustmentValueStr}
-          />
-        )}
-
-        <Button disabled={!canSave || saving} onClick={handleSave}>
-          {saving ? 'Saving…' : 'Save Profile'}
-        </Button>
       </div>
+
+      <Button disabled={!canSave || saving} onClick={handleSave}>
+        {saving ? 'Saving…' : 'Save Profile'}
+      </Button>
     </div>
   )
 }

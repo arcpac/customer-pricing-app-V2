@@ -67,8 +67,10 @@ export function PricingProfilesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-lg font-semibold">Pricing Profiles</h1>
+    <div className="rounded-lg border bg-card">
+      <div className="px-4 py-3 border-b">
+        <h1 className="text-sm font-semibold">Pricing Profiles</h1>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -135,4 +137,5 @@ export function PricingProfilesPage() {
       </Table>
     </div>
   )
+
 }

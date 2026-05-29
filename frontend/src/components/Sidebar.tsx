@@ -23,14 +23,14 @@ interface SidebarProps {
 
 export function Sidebar({ activeView, onNavigate }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col bg-sidebar border-r border-sidebar-border shrink-0 z-10">
+    <aside className="fixed left-0 top-0 h-screen w-56 flex flex-col border-r bg-white border-sidebar-border shrink-0 z-10">
       <nav className="flex-1 p-3 space-y-0.5">
         {NAV_ITEMS.map(({ label, view, icon }) => (
           <button
             key={view}
             onClick={() => onNavigate(view)}
             className={cn(
-              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium bg-white transition-colors',
               activeView === view
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                 : 'text-sidebar-foreground hover:bg-sidebar-accent/50',

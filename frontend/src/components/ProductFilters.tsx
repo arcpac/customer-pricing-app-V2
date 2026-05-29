@@ -59,13 +59,13 @@ export function ProductFilters({ products, onFiltersChange }: ProductFiltersProp
         placeholder="Search products…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="h-8 w-52"
+        className="h-9 w-52"
       />
       <Input
         placeholder="SKU…"
         value={sku}
         onChange={(e) => setSku(e.target.value)}
-        className="h-8 w-32"
+        className="h-9 w-32"
       />
 
       <FilterSelect
@@ -101,7 +101,7 @@ interface FilterSelectProps {
 function FilterSelect({ placeholder, value, onValueChange, options }: FilterSelectProps) {
   return (
     <Select value={value || null} onValueChange={onValueChange}>
-      <SelectTrigger className="h-8 w-40">
+      <SelectTrigger className="h-9 w-40">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
