@@ -155,6 +155,8 @@ Full request/response schemas: http://localhost:4000/api-docs
 
 ### Pre-seeded Profiles (Overlap Scenario)
 
+Three pricing profiles are pre-loaded on startup to demonstrate overlap resolution.
+
 | Profile | Rule | Customer Scope | Product Scope | Score |
 |---|---|---|---|---|
 | A | −10% all Wine | Independent Retailers (group) | Segment | 1 |
@@ -201,3 +203,13 @@ For full pricing rules and edge cases, see [`product-description.md`](./product-
 | Data | In-memory (no database) |
 | Notifications | Sonner |
 | Icons | Lucide React |
+
+---
+
+## Development Tools
+
+| Tool | Purpose |
+|---|---|
+| VS Code | Primary editor |
+| Claude Code | AI pair programming (Claude Code CLI) |
+| Swagger UI | API explorer — http://localhost:4000/api-docs |
