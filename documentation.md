@@ -85,6 +85,74 @@ customer-pricing-app/
 
 ---
 
+## Data Model
+
+```mermaid
+erDiagram
+  CUSTOMER {
+    string id PK
+    string name
+  }
+  CUSTOMER_GROUP {
+    string id PK
+    string name
+  }
+  CUSTOMER_GROUP_MEMBERSHIP {
+    string customerId FK
+    string customerGroupId FK
+  }
+  PRODUCT {
+    string id PK
+    string title
+    string sku
+    string subCategory
+    string segment
+    string brand
+    float basePrice
+    bool active
+  }
+  PRICING_PROFILE {
+    string id PK
+    string name
+    string customerScope
+    string customerId FK
+    string customerGroupId FK
+    string productScope
+    string adjustmentType
+    string adjustmentDirection
+    float adjustmentValue
+    timestamp createdAt
+  }
+  PRICING_PROFILE_ITEM {
+    string id PK
+    string pricingProfileId FK
+    string productId FK
+    float basePrice
+    float adjustedPrice
+  }
+  RESOLVE_LOG {
+    string id PK
+    string customerId FK
+    string productId FK
+    string resolvedProfileId FK
+    float resolvedPrice
+    int score
+    timestamp resolvedAt
+  }
+
+  CUSTOMER ||--o{ CUSTOMER_GROUP_MEMBERSHIP : "belongs to"
+  CUSTOMER_GROUP ||--o{ CUSTOMER_GROUP_MEMBERSHIP : "has"
+  CUSTOMER ||--o{ PRICING_PROFILE : "targeted by"
+  CUSTOMER_GROUP ||--o{ PRICING_PROFILE : "targeted by"
+  PRICING_PROFILE ||--o{ PRICING_PROFILE_ITEM : "contains"
+  PRODUCT ||--o{ PRICING_PROFILE_ITEM : "appears in"
+  CUSTOMER ||--o{ RESOLVE_LOG : "resolved for"
+  PRODUCT ||--o{ RESOLVE_LOG : "resolved for"
+  PRICING_PROFILE ||--o{ RESOLVE_LOG : "won"
+```
+
+---
+
 ## Key Reference Files
 
 ### `product-description.md`
