@@ -157,19 +157,6 @@ Save is blocked until:
 - Adjustment value > 0
 - No products result in a $0 price
 
-### Preview Flow
-
-Live per-product preview renders as products and adjustment are configured:
-
-| Column | Notes |
-|---|---|
-| SKU | — |
-| Title | — |
-| Base Price | Current catalogue price |
-| Adjustment Δ | +$X (green) / −$X (red) |
-| New Price | Calculated; $0.00 shows destructive badge |
-
----
 
 ## API Endpoints
 
