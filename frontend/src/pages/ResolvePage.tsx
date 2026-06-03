@@ -178,7 +178,14 @@ export function ResolvePage() {
                   </td>
                   <td className="px-3 py-2.5">
                     {item.sourceProfileName ? (
-                      <Badge variant="secondary" className="text-xs">{item.sourceProfileName}</Badge>
+                      <div className="space-y-0.5">
+                        <Badge variant="secondary" className="text-xs">{item.sourceProfileName}</Badge>
+                        {item.matchReasonCustomer && item.matchReasonProduct && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.matchReasonCustomer} · {item.matchReasonProduct} · score {item.matchScore}
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">No profile</span>
                     )}

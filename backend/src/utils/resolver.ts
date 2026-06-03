@@ -9,6 +9,9 @@ export interface ResolveResult {
   sourceProfileId: string;
   sourceProfileName: string;
   explanation: string;
+  matchReasonCustomer: string;
+  matchReasonProduct: string;
+  matchScore: number;
 }
 
 export interface NoMatchResult {
@@ -136,5 +139,8 @@ export function resolvePrice(
     sourceProfileId: winner.id,
     sourceProfileName: winner.name,
     explanation,
+    matchReasonCustomer: customerScopeLabel,
+    matchReasonProduct: productScopeLabel,
+    matchScore: score,
   };
 }

@@ -113,6 +113,7 @@ export function PricingProfilesPage() {
                         <TableHeader>
                           <TableRow className="bg-muted/30">
                             <TableHead className="text-xs">Product ID</TableHead>
+                            <TableHead className="text-xs">Product Name</TableHead>
                             <TableHead className="text-xs text-right">Base Price</TableHead>
                             <TableHead className="text-xs text-right">Adjusted Price</TableHead>
                           </TableRow>
@@ -121,6 +122,7 @@ export function PricingProfilesPage() {
                           {p.items.map((item) => (
                             <TableRow key={item.productId} className="bg-muted/10">
                               <TableCell className="font-mono text-xs">{item.productId}</TableCell>
+                              <TableCell className="font-mono text-xs">{item.name}</TableCell>
                               <TableCell className="text-xs text-right">${item.basePrice.toFixed(2)}</TableCell>
                               <TableCell className="text-xs text-right">${item.adjustedPrice.toFixed(2)}</TableCell>
                             </TableRow>

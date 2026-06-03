@@ -24,6 +24,9 @@ export interface BatchResolveItem {
   sourceProfileId?: string
   sourceProfileName?: string
   explanation?: string
+  matchReasonCustomer?: string
+  matchReasonProduct?: string
+  matchScore?: number
   message?: string
   adjustmentType?: 'fixed' | 'percentage' | 'custom_price'
   adjustmentDirection?: 'increase' | 'decrease'

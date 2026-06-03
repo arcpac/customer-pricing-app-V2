@@ -55,6 +55,7 @@ export interface PricingProfilePayload {
 
 export interface PricingProfileItem {
   productId: string
+  name: string,
   basePrice: number
   adjustedPrice: number
 }
