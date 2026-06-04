@@ -1,6 +1,7 @@
 import { Router } from "express"
 import type { Request, Response } from "express"
-import { products } from "../data/products.js"
+import { prisma } from "../lib/prisma.js"
+import { mapProduct } from "../lib/mappers.js"
 
 const router = Router()
 
@@ -49,45 +50,25 @@ const router = Router()
  *               items:
  *                 $ref: '#/components/schemas/Product'
  */
-router.get("/", (req: Request, res: Response) => {
-  const { search, sku, subCategory, segment, brand } = req.query as Record<string, string>
+router.get("/", async (req: Request, res: Response) => {
+  const { search, sku, subCategory, segment, brand } = req.query as Record<string, string | undefined>
 
-  let results = [...products]
+  type Where = Parameters<typeof prisma.product.findMany>[0]["where"]
+  const where: Where = {}
 
   if (search) {
-    const q = search.toLowerCase()
-    results = results.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q)
-    )
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { sku: { contains: search, mode: "insensitive" } },
+    ]
   }
+  if (sku) where.sku = { contains: sku, mode: "insensitive" }
+  if (subCategory) where.subCategory = { equals: subCategory, mode: "insensitive" }
+  if (segment) where.segment = { equals: segment, mode: "insensitive" }
+  if (brand) where.brand = { equals: brand, mode: "insensitive" }
 
-  if (sku) {
-    results = results.filter((p) =>
-      p.sku.toLowerCase().includes(sku.toLowerCase())
-    )
-  }
-
-  if (subCategory) {
-    results = results.filter(
-      (p) => p.subCategory.toLowerCase() === subCategory.toLowerCase()
-    )
-  }
-
-  if (segment) {
-    results = results.filter(
-      (p) => p.segment.toLowerCase() === segment.toLowerCase()
-    )
-  }
-
-  if (brand) {
-    results = results.filter(
-      (p) => p.brand.toLowerCase() === brand.toLowerCase()
-    )
-  }
-
-  res.json(results)
+  const products = await prisma.product.findMany({ where })
+  res.json(products.map(mapProduct))
 })
 
 export default router

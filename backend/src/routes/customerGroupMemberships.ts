@@ -1,6 +1,6 @@
 import { Router } from "express"
 import type { Request, Response } from "express"
-import { customerGroupMemberships } from "../data/customerGroupMemberships.js"
+import { prisma } from "../lib/prisma.js"
 
 const router = Router()
 
@@ -20,8 +20,9 @@ const router = Router()
  *               items:
  *                 $ref: '#/components/schemas/CustomerGroupMembership'
  */
-router.get("/", (_req: Request, res: Response) => {
-  res.json(customerGroupMemberships)
+router.get("/", async (_req: Request, res: Response) => {
+  const memberships = await prisma.customerGroupMembership.findMany()
+  res.json(memberships)
 })
 
 export default router

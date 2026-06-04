@@ -44,7 +44,7 @@ export interface PricingProfilePayload {
   name: string
   customerScope: 'individual' | 'group'
   customerId?: string
-  customerGroup?: string
+  customerGroupId?: string
   adjustmentType: AdjustmentType
   adjustmentDirection: AdjustmentDirection
   adjustmentValue: number
@@ -65,7 +65,8 @@ export interface PricingProfile {
   name: string
   customerScope: 'individual' | 'group'
   customerId?: string
-  customerGroup?: string
+  customerGroupId?: string
+  customerGroupName?: string
   adjustmentType: AdjustmentType
   adjustmentDirection: AdjustmentDirection
   adjustmentValue: number

@@ -15,7 +15,7 @@ export async function getProducts(
   if (filters?.brand) params.set("brand", filters.brand);
 
   const qs = params.toString();
-  const res = await fetch(`${BASE}/api/products${qs ? `?${qs}` : ""}`);
+  const res = await fetch(`${BASE}/api/products${qs ? `?${qs}` : ""}`, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch products");
   return res.json() as Promise<Product[]>;
 }

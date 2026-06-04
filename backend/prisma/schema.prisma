@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("users")
+}
+
+model Customer {
+  id          String                    @id @default(uuid())
+  name        String
+  memberships CustomerGroupMembership[]
+  profiles    PricingProfile[]          @relation("ProfileCustomer")
+
+  @@map("customers")
+}
+
+model CustomerGroup {
+  id          String                    @id @default(uuid())
+  name        String                    @unique
+  memberships CustomerGroupMembership[]
+  profiles    PricingProfile[]          @relation("ProfileGroup")
+
+  @@map("customer_groups")
+}
+
+model CustomerGroupMembership {
+  customerId      String
+  customerGroupId String
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerGroup   CustomerGroup @relation(fields: [customerGroupId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, customerGroupId])
+  @@map("customer_group_memberships")
+}
+
+model Product {
+  id          String               @id @default(uuid())
+  title       String
+  sku         String               @unique
+  subCategory String
+  segment     String
+  brand       String
+  basePrice   Decimal              @db.Decimal(10, 2)
+  items       PricingProfileItem[]
+
+  @@map("products")
+}
+
+model PricingProfile {
+  id                  String               @id @default(uuid())
+  name                String
+  customerScope       String
+  customerId          String?
+  customer            Customer?            @relation("ProfileCustomer", fields: [customerId], references: [id])
+  customerGroupId     String?
+  customerGroup       CustomerGroup?       @relation("ProfileGroup", fields: [customerGroupId], references: [id])
+  adjustmentType      String
+  adjustmentDirection String
+  adjustmentValue     Decimal              @db.Decimal(10, 4)
+  productScope        String
+  productFilter       Json?
+  items               PricingProfileItem[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  auditLogs           ProfileAuditLog[]
+
+  @@map("pricing_profiles")
+}
+
+model PricingProfileItem {
+  id            String         @id @default(uuid())
+  profileId     String
+  productId     String
+  basePrice     Decimal        @db.Decimal(10, 2)
+  adjustedPrice Decimal        @db.Decimal(10, 2)
+  profile       PricingProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id])
+
+  @@unique([profileId, productId])
+  @@map("pricing_profile_items")
+}
+
+model ProfileAuditLog {
+  id        String         @id @default(uuid())
+  profileId String
+  action    String
+  payload   Json?
+  createdAt DateTime       @default(now())
+  profile   PricingProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("profile_audit_logs")
+}
+
+model ResolvedPriceLog {
+  id              String   @id @default(uuid())
+  customerId      String
+  productId       String
+  resolvedPrice   Decimal? @db.Decimal(10, 2)
+  sourceProfileId String?
+  matchScore      Int?
+  createdAt       DateTime @default(now())
+
+  @@map("resolved_price_logs")
+}

@@ -1,6 +1,6 @@
 import { Router } from "express"
 import type { Request, Response } from "express"
-import { customers } from "../data/customers.js"
+import { prisma } from "../lib/prisma.js"
 
 const router = Router()
 
@@ -20,7 +20,8 @@ const router = Router()
  *               items:
  *                 $ref: '#/components/schemas/Customer'
  */
-router.get("/", (_req: Request, res: Response) => {
+router.get("/", async (_req: Request, res: Response) => {
+  const customers = await prisma.customer.findMany({ orderBy: { name: "asc" } })
   res.json(customers)
 })
 

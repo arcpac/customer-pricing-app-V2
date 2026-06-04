@@ -30,7 +30,7 @@ function formatProductScope(profile: PricingProfile): string {
 }
 
 function formatCustomer(profile: PricingProfile, nameMap: Map<string, string>): string {
-  if (profile.customerScope === 'group') return `Group: ${profile.customerGroup ?? '—'}`
+  if (profile.customerScope === 'group') return `Group: ${profile.customerGroupName ?? '—'}`
   const name = profile.customerId ? (nameMap.get(profile.customerId) ?? profile.customerId) : '—'
   return `Individual: ${name}`
 }
