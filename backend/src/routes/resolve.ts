@@ -1,11 +1,15 @@
 import { Router } from "express"
 import type { Request, Response } from "express"
-import { pricingProfiles } from "../data/pricingProfiles.js"
-import { products } from "../data/products.js"
-import { customers } from "../data/customers.js"
+import { prisma } from "../lib/prisma.js"
+import { mapCustomer, mapProduct, mapProfile, mapMembership } from "../lib/mappers.js"
 import { resolvePrice } from "../utils/resolver.js"
 
 const router = Router()
+
+const PROFILE_INCLUDE = {
+  items: { include: { product: true } },
+  customerGroup: true,
+} as const
 
 /**
  * @openapi
@@ -18,12 +22,10 @@ const router = Router()
  *         name: customerId
  *         required: true
  *         schema: { type: string }
- *         example: cust_001
  *       - in: query
  *         name: productId
  *         required: true
  *         schema: { type: string }
- *         example: prod_001
  *     responses:
  *       200:
  *         description: Resolved price with source profile
@@ -33,19 +35,11 @@ const router = Router()
  *               $ref: '#/components/schemas/ResolveResult'
  *       400:
  *         description: Missing parameters
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Customer or product not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get("/", (req: Request, res: Response) => {
-  const { customerId, productId } = req.query as Record<string, string>
+router.post("/", async (req: Request, res: Response) => {
+  const { customerId, productId } = req.body as Record<string, string>
 
   if (!customerId) {
     res.status(400).json({ error: "customerId is required" })
@@ -56,19 +50,28 @@ router.get("/", (req: Request, res: Response) => {
     return
   }
 
-  const customer = customers.find((c) => c.id === customerId)
-  if (!customer) {
+  const [customerRow, productRow, profileRows, membershipRows] = await Promise.all([
+    prisma.customer.findUnique({ where: { id: customerId } }),
+    prisma.product.findUnique({ where: { id: productId } }),
+    prisma.pricingProfile.findMany({ include: PROFILE_INCLUDE }),
+    prisma.customerGroupMembership.findMany(),
+  ])
+
+  if (!customerRow) {
     res.status(404).json({ error: "Customer not found" })
     return
   }
-
-  const product = products.find((p) => p.id === productId)
-  if (!product) {
+  if (!productRow) {
     res.status(404).json({ error: "Product not found" })
     return
   }
 
-  res.json(resolvePrice(customer, product, pricingProfiles))
+  const customer = mapCustomer(customerRow)
+  const product = mapProduct(productRow)
+  const profiles = profileRows.map(mapProfile)
+  const memberships = membershipRows.map(mapMembership)
+
+  res.json(resolvePrice(customer, product, profiles, memberships))
 })
 
 /**
@@ -95,36 +98,43 @@ router.get("/", (req: Request, res: Response) => {
  *       404:
  *         description: Customer not found
  */
-router.get("/batch", (req: Request, res: Response) => {
-  const { customerId, productIds: productIdsParam } = req.query as Record<string, string>
+router.post("/batch", async (req: Request, res: Response) => {
+  const { customerId, productIds: rawProductIds } = req.body as { customerId: string; productIds: unknown }
 
   if (!customerId) {
     res.status(400).json({ error: "customerId is required" })
     return
   }
-  if (!productIdsParam) {
-    res.status(400).json({ error: "productIds is required" })
+  if (!Array.isArray(rawProductIds) || rawProductIds.length === 0) {
+    res.status(400).json({ error: "productIds must be a non-empty array" })
     return
   }
+  const productIds = rawProductIds as string[]
 
-  const customer = customers.find((c) => c.id === customerId)
-  if (!customer) {
+  const [customerRow, productRows, profileRows, membershipRows] = await Promise.all([
+    prisma.customer.findUnique({ where: { id: customerId } }),
+    prisma.product.findMany({ where: { id: { in: productIds } } }),
+    prisma.pricingProfile.findMany({ include: PROFILE_INCLUDE }),
+    prisma.customerGroupMembership.findMany(),
+  ])
+
+  if (!customerRow) {
     res.status(404).json({ error: "Customer not found" })
     return
   }
 
-  const productIds = productIdsParam.split(",").map((id) => id.trim()).filter(Boolean)
-  if (productIds.length === 0) {
-    res.status(400).json({ error: "productIds must be a non-empty comma-separated list" })
-    return
-  }
+  const customer = mapCustomer(customerRow)
+  const profiles = profileRows.map(mapProfile)
+  const memberships = membershipRows.map(mapMembership)
+  const productMap = new Map(productRows.map((p) => [p.id, p]))
 
   const results = productIds.map((productId) => {
-    const product = products.find((p) => p.id === productId)
-    if (!product) {
+    const productRow = productMap.get(productId)
+    if (!productRow) {
       return { productId, title: null, basePrice: null, resolvedPrice: null, message: "Product not found" }
     }
-    const resolved = resolvePrice(customer, product, pricingProfiles)
+    const product = mapProduct(productRow)
+    const resolved = resolvePrice(customer, product, profiles, memberships)
     const base = {
       productId,
       title: product.title,
@@ -137,13 +147,13 @@ router.get("/batch", (req: Request, res: Response) => {
     if (resolved.resolvedPrice === null) {
       return { ...base, ...resolved }
     }
-    const profile = pricingProfiles.find((p) => p.id === resolved.sourceProfileId)
+    const sourceProfile = profiles.find((p) => p.id === resolved.sourceProfileId)
     return {
       ...base,
       ...resolved,
-      adjustmentType: profile?.adjustmentType,
-      adjustmentDirection: profile?.adjustmentDirection,
-      adjustmentValue: profile?.adjustmentValue,
+      adjustmentType: sourceProfile?.adjustmentType,
+      adjustmentDirection: sourceProfile?.adjustmentDirection,
+      adjustmentValue: sourceProfile?.adjustmentValue,
     }
   })
 

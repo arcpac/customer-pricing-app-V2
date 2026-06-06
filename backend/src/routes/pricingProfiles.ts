@@ -1,14 +1,16 @@
-import { Router } from "express";
-import type { Request, Response } from "express";
-import { pricingProfiles } from "../data/pricingProfiles.js";
-import type { PricingProfile, ProductFilter } from "../data/pricingProfiles.js";
-import { products } from "../data/products.js";
-import { customers } from "../data/customers.js";
-import { customerGroups } from "../data/customerGroups.js";
-import { computeAdjustedPrice } from "../utils/pricing.js";
-import { randomUUID } from "crypto";
+import { Router } from "express"
+import type { Request, Response } from "express"
+import { prisma } from "../lib/prisma.js"
+import { mapProfile } from "../lib/mappers.js"
+import type { ProductFilter } from "../data/pricingProfiles.js"
+import { computeAdjustedPrice } from "../utils/pricing.js"
 
-const router = Router();
+const router = Router()
+
+const PROFILE_INCLUDE = {
+  items: { include: { product: true } },
+  customerGroup: true,
+} as const
 
 /**
  * @openapi
@@ -39,8 +41,8 @@ const router = Router();
  *               name: { type: string }
  *               customerScope: { type: string, enum: [individual, group], default: individual }
  *               customerId: { type: string }
- *               customerGroup: { type: string }
- *               adjustmentType: { type: string, enum: [fixed, percentage] }
+ *               customerGroupId: { type: string }
+ *               adjustmentType: { type: string, enum: [fixed, percentage, custom_price] }
  *               adjustmentDirection: { type: string, enum: [increase, decrease] }
  *               adjustmentValue: { type: number, minimum: 0 }
  *               productScope: { type: string, enum: [explicit, product, subCategory, segment, all], default: explicit }
@@ -65,9 +67,13 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", (_req: Request, res: Response) => {
-  res.json(pricingProfiles);
-});
+router.get("/", async (_req: Request, res: Response) => {
+  const profiles = await prisma.pricingProfile.findMany({
+    include: PROFILE_INCLUDE,
+    orderBy: { createdAt: "desc" },
+  })
+  res.json(profiles.map(mapProfile))
+})
 
 /**
  * @openapi
@@ -83,32 +89,27 @@ router.get("/", (_req: Request, res: Response) => {
  *     responses:
  *       200:
  *         description: Pricing profile
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PricingProfile'
  *       404:
  *         description: Not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id", (req: Request, res: Response) => {
-  const profile = pricingProfiles.find((p) => p.id === req.params.id);
+router.get("/:id", async (req: Request, res: Response) => {
+  const profile = await prisma.pricingProfile.findUnique({
+    where: { id: req.params.id },
+    include: PROFILE_INCLUDE,
+  })
   if (!profile) {
-    res.status(404).json({ error: "Profile not found" });
-    return;
+    res.status(404).json({ error: "Profile not found" })
+    return
   }
-  res.json(profile);
-});
+  res.json(mapProfile(profile))
+})
 
-router.post("/", (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   const {
     name,
     customerScope = "individual",
     customerId,
-    customerGroup,
+    customerGroupId,
     adjustmentType,
     adjustmentDirection,
     adjustmentValue,
@@ -116,212 +117,146 @@ router.post("/", (req: Request, res: Response) => {
     productFilter,
     productIds,
   } = req.body as {
-    name: string;
-    customerScope?: "individual" | "group";
-    customerId?: string;
-    customerGroup?: string;
-    adjustmentType: unknown;
-    adjustmentDirection: unknown;
-    adjustmentValue: unknown;
-    productScope?: "explicit" | "product" | "subCategory" | "segment" | "all";
-    productFilter?: ProductFilter;
-    productIds?: string[];
-  };
+    name: string
+    customerScope?: "individual" | "group"
+    customerId?: string
+    customerGroupId?: string
+    adjustmentType: unknown
+    adjustmentDirection: unknown
+    adjustmentValue: unknown
+    productScope?: "explicit" | "product" | "subCategory" | "segment" | "all"
+    productFilter?: ProductFilter
+    productIds?: string[]
+  }
 
   if (!name || typeof name !== "string" || name.trim() === "") {
-    res.status(400).json({ error: "name is required" });
-    return;
+    res.status(400).json({ error: "name is required" })
+    return
   }
   if (!["individual", "group"].includes(customerScope)) {
-    res
-      .status(400)
-      .json({ error: "customerScope must be 'individual' or 'group'" });
-    return;
+    res.status(400).json({ error: "customerScope must be 'individual' or 'group'" })
+    return
   }
-  if (
-    !["fixed", "percentage", "custom_price"].includes(adjustmentType as string)
-  ) {
-    res
-      .status(400)
-      .json({
-        error:
-          "adjustmentType must be 'fixed', 'percentage', or 'custom_price'",
-      });
-    return;
+  if (!["fixed", "percentage", "custom_price"].includes(adjustmentType as string)) {
+    res.status(400).json({ error: "adjustmentType must be 'fixed', 'percentage', or 'custom_price'" })
+    return
   }
   if (!["increase", "decrease"].includes(adjustmentDirection as string)) {
-    res
-      .status(400)
-      .json({ error: "adjustmentDirection must be 'increase' or 'decrease'" });
-    return;
+    res.status(400).json({ error: "adjustmentDirection must be 'increase' or 'decrease'" })
+    return
   }
   if (typeof adjustmentValue !== "number" || adjustmentValue < 0) {
-    res
-      .status(400)
-      .json({ error: "adjustmentValue must be a non-negative number" });
-    return;
+    res.status(400).json({ error: "adjustmentValue must be a non-negative number" })
+    return
   }
-  if (
-    !["explicit", "product", "subCategory", "segment", "all"].includes(
-      productScope,
-    )
-  ) {
-    res
-      .status(400)
-      .json({
-        error:
-          "productScope must be 'explicit', 'product', 'subCategory', 'segment', or 'all'",
-      });
-    return;
+  if (!["explicit", "product", "subCategory", "segment", "all"].includes(productScope)) {
+    res.status(400).json({ error: "productScope must be 'explicit', 'product', 'subCategory', 'segment', or 'all'" })
+    return
   }
 
   // Validate customer scope
   if (customerScope === "individual") {
     if (!customerId) {
-      res
-        .status(400)
-        .json({
-          error: "customerId is required when customerScope is 'individual'",
-        });
-      return;
+      res.status(400).json({ error: "customerId is required when customerScope is 'individual'" })
+      return
     }
-    if (!customers.some((c) => c.id === customerId)) {
-      res.status(400).json({ error: "Customer not found" });
-      return;
+    const customer = await prisma.customer.findUnique({ where: { id: customerId } })
+    if (!customer) {
+      res.status(400).json({ error: "Customer not found" })
+      return
     }
   } else {
-    if (
-      !customerGroup ||
-      typeof customerGroup !== "string" ||
-      customerGroup.trim() === ""
-    ) {
-      res
-        .status(400)
-        .json({
-          error: "customerGroup is required when customerScope is 'group'",
-        });
-      return;
+    if (!customerGroupId || typeof customerGroupId !== "string" || customerGroupId.trim() === "") {
+      res.status(400).json({ error: "customerGroupId is required when customerScope is 'group'" })
+      return
     }
-    if (!customerGroups.some((g) => g.name === customerGroup)) {
-      res.status(400).json({ error: "Customer group not found" });
-      return;
+    const group = await prisma.customerGroup.findUnique({ where: { id: customerGroupId } })
+    if (!group) {
+      res.status(400).json({ error: "Customer group not found" })
+      return
     }
   }
 
-  // Resolve which products this profile covers (snapshot at creation time)
-  let targetProductIds: string[];
+  // Resolve target products
+  let targetProducts: { id: string; basePrice: number }[]
   if (productScope === "explicit") {
     if (!Array.isArray(productIds) || productIds.length === 0) {
-      res
-        .status(400)
-        .json({
-          error:
-            "productIds must be a non-empty array when productScope is 'explicit'",
-        });
-      return;
+      res.status(400).json({ error: "productIds must be a non-empty array when productScope is 'explicit'" })
+      return
     }
-    targetProductIds = productIds;
+    const rows = await prisma.product.findMany({ where: { id: { in: productIds } } })
+    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
   } else if (productScope === "product") {
     if (!productFilter?.productId) {
-      res
-        .status(400)
-        .json({
-          error:
-            "productFilter.productId is required when productScope is 'product'",
-        });
-      return;
+      res.status(400).json({ error: "productFilter.productId is required when productScope is 'product'" })
+      return
     }
-    targetProductIds = [productFilter.productId];
+    const p = await prisma.product.findUnique({ where: { id: productFilter.productId } })
+    if (!p) {
+      res.status(400).json({ error: "Product not found" })
+      return
+    }
+    targetProducts = [{ id: p.id, basePrice: p.basePrice.toNumber() }]
   } else if (productScope === "subCategory") {
     if (!productFilter?.subCategory) {
-      res
-        .status(400)
-        .json({
-          error:
-            "productFilter.subCategory is required when productScope is 'subCategory'",
-        });
-      return;
+      res.status(400).json({ error: "productFilter.subCategory is required when productScope is 'subCategory'" })
+      return
     }
-    targetProductIds = products
-      .filter(
-        (p) =>
-          p.subCategory.toLowerCase() ===
-          productFilter.subCategory!.toLowerCase(),
-      )
-      .map((p) => p.id);
+    const rows = await prisma.product.findMany({
+      where: { subCategory: { equals: productFilter.subCategory, mode: "insensitive" } },
+    })
+    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
   } else if (productScope === "segment") {
     if (!productFilter?.segment) {
-      res
-        .status(400)
-        .json({
-          error:
-            "productFilter.segment is required when productScope is 'segment'",
-        });
-      return;
+      res.status(400).json({ error: "productFilter.segment is required when productScope is 'segment'" })
+      return
     }
-    targetProductIds = products
-      .filter(
-        (p) => p.segment.toLowerCase() === productFilter.segment!.toLowerCase(),
-      )
-      .map((p) => p.id);
-  } else {
-    // "all"
-    targetProductIds = products.map((p) => p.id);
-  }
-
-  const items = targetProductIds
-    .map((productId) => {
-      const product = products.find((p) => p.id === productId);
-      if (!product) return null;
-      return {
-        productId,
-        basePrice: product.basePrice,
-        adjustedPrice: computeAdjustedPrice(
-          product.basePrice,
-          adjustmentType as "fixed" | "percentage" | "custom_price",
-          adjustmentDirection as "increase" | "decrease",
-          adjustmentValue as number,
-        ),
-      };
+    const rows = await prisma.product.findMany({
+      where: { segment: { equals: productFilter.segment, mode: "insensitive" } },
     })
-    .filter(Boolean);
-
-  if (items.length === 0) {
-    res.status(400).json({ error: "No valid products found" });
-    return;
+    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
+  } else {
+    const rows = await prisma.product.findMany()
+    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
   }
 
-  const base = {
-    id: randomUUID(),
-    name: (name as string).trim(),
+  const itemData = targetProducts.map((p) => ({
+    productId: p.id,
+    basePrice: p.basePrice,
+    adjustedPrice: computeAdjustedPrice(
+      p.basePrice,
+      adjustmentType as "fixed" | "percentage" | "custom_price",
+      adjustmentDirection as "increase" | "decrease",
+      adjustmentValue as number,
+    ),
+  }))
+
+  const baseData = {
+    name: name.trim(),
     customerScope,
-    adjustmentType: adjustmentType as "fixed" | "percentage",
-    adjustmentDirection: adjustmentDirection as "increase" | "decrease",
+    adjustmentType: adjustmentType as string,
+    adjustmentDirection: adjustmentDirection as string,
     adjustmentValue: adjustmentValue as number,
     productScope,
-    items: items as PricingProfile["items"],
-    createdAt: new Date().toISOString(),
-  };
-  // exactOptionalPropertyTypes requires we only include optional fields when they are defined
-  const resolvedFilter = productFilter as ProductFilter;
-  const hasFilter = productScope !== "all" && productScope !== "explicit";
-  const profile: PricingProfile =
-    customerScope === "individual"
-      ? hasFilter
-        ? { ...base, customerId: customerId!, productFilter: resolvedFilter }
-        : { ...base, customerId: customerId! }
-      : hasFilter
-        ? {
-            ...base,
-            customerGroup: customerGroup!,
-            productFilter: resolvedFilter,
-          }
-        : { ...base, customerGroup: customerGroup! };
-  console.log("PROFILE CREATED: ", profile);
+    items: { create: itemData },
+  }
 
-  pricingProfiles.push(profile);
-  res.status(201).json(profile);
-});
+  const customerData = customerScope === "individual"
+    ? { customerId: customerId! }
+    : { customerGroupId: customerGroupId! }
+
+  const filterData =
+    productFilter != null && productScope !== "all" && productScope !== "explicit"
+      ? { productFilter: productFilter as object }
+      : {}
+
+  const created = await prisma.pricingProfile.create({
+    data: { ...baseData, ...customerData, ...filterData },
+    include: PROFILE_INCLUDE,
+  })
+
+  res.status(201).json(mapProfile(created))
+})
 
 /**
  * @openapi
@@ -346,22 +281,10 @@ router.post("/", (req: Request, res: Response) => {
  *     responses:
  *       200:
  *         description: Updated profile
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PricingProfile'
  *       400:
  *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *   delete:
  *     summary: Delete a pricing profile
  *     tags: [Pricing Profiles]
@@ -375,82 +298,57 @@ router.post("/", (req: Request, res: Response) => {
  *         description: Deleted
  *       404:
  *         description: Not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.put("/:id", (req: Request, res: Response) => {
-  const idx = pricingProfiles.findIndex((p) => p.id === req.params.id);
-  if (idx === -1) {
-    res.status(404).json({ error: "Profile not found" });
-    return;
+router.put("/:id", async (req: Request, res: Response) => {
+  const existing = await prisma.pricingProfile.findUnique({
+    where: { id: req.params.id },
+    include: PROFILE_INCLUDE,
+  })
+  if (!existing) {
+    res.status(404).json({ error: "Profile not found" })
+    return
   }
 
-  const { name } = req.body as { name: unknown };
+  const { name } = req.body as { name: unknown }
   if (!name || typeof name !== "string" || name.trim() === "") {
-    res.status(400).json({ error: "name is required" });
-    return;
+    res.status(400).json({ error: "name is required" })
+    return
   }
 
-  const existing = pricingProfiles[idx] as PricingProfile;
-  const updatedItems = existing.items.map((item) => {
-    const product = products.find((p) => p.id === item.productId);
-    if (!product) return item;
-    return {
-      ...item,
-      basePrice: product.basePrice,
-      adjustedPrice: computeAdjustedPrice(
-        product.basePrice,
-        existing.adjustmentType as "fixed" | "percentage" | "custom_price",
-        existing.adjustmentDirection,
-        existing.adjustmentValue,
-      ),
-    };
-  });
+  const updatedItems = existing.items.map((item) => ({
+    productId: item.productId,
+    basePrice: item.basePrice.toNumber(),
+    adjustedPrice: computeAdjustedPrice(
+      item.product.basePrice.toNumber(),
+      existing.adjustmentType as "fixed" | "percentage" | "custom_price",
+      existing.adjustmentDirection as "increase" | "decrease",
+      existing.adjustmentValue.toNumber(),
+    ),
+  }))
 
-  const updated: PricingProfile =
-    existing.customerScope === "individual"
-      ? existing.productFilter
-        ? {
-            ...existing,
-            name: name.trim(),
-            items: updatedItems,
-            customerId: existing.customerId!,
-            productFilter: existing.productFilter,
-          }
-        : {
-            ...existing,
-            name: name.trim(),
-            items: updatedItems,
-            customerId: existing.customerId!,
-          }
-      : existing.productFilter
-        ? {
-            ...existing,
-            name: name.trim(),
-            items: updatedItems,
-            customerGroup: existing.customerGroup!,
-            productFilter: existing.productFilter,
-          }
-        : {
-            ...existing,
-            name: name.trim(),
-            items: updatedItems,
-            customerGroup: existing.customerGroup!,
-          };
-  pricingProfiles[idx] = updated;
-  res.json(updated);
-});
+  const updated = await prisma.pricingProfile.update({
+    where: { id: req.params.id },
+    data: {
+      name: name.trim(),
+      items: {
+        deleteMany: {},
+        create: updatedItems,
+      },
+    },
+    include: PROFILE_INCLUDE,
+  })
 
-router.delete("/:id", (req: Request, res: Response) => {
-  const idx = pricingProfiles.findIndex((p) => p.id === req.params.id);
-  if (idx === -1) {
-    res.status(404).json({ error: "Profile not found" });
-    return;
+  res.json(mapProfile(updated))
+})
+
+router.delete("/:id", async (req: Request, res: Response) => {
+  const existing = await prisma.pricingProfile.findUnique({ where: { id: req.params.id } })
+  if (!existing) {
+    res.status(404).json({ error: "Profile not found" })
+    return
   }
-  pricingProfiles.splice(idx, 1);
-  res.status(204).end();
-});
+  await prisma.pricingProfile.delete({ where: { id: req.params.id } })
+  res.status(204).end()
+})
 
-export default router;
+export default router

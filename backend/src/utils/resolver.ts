@@ -1,8 +1,7 @@
-import type { PricingProfile } from "../data/pricingProfiles.js";
-import type { Product } from "../data/products.js";
-import type { Customer } from "../data/customers.js";
-import { customerGroups } from "../data/customerGroups.js";
-import { customerGroupMemberships } from "../data/customerGroupMemberships.js";
+import type { PricingProfile } from "../data/pricingProfiles.js"
+import type { Product } from "../data/products.js"
+import type { Customer } from "../data/customers.js"
+import type { CustomerGroupMembership } from "../data/customerGroupMemberships.js"
 
 export interface ResolveResult {
   resolvedPrice: number;
@@ -38,16 +37,16 @@ function productScore(profile: PricingProfile): number {
 }
 
 function profileCoversCustomer(
-  profile: PricingProfile,
+  profile: PricingProfile & { customerGroupId?: string },
   customer: Customer,
+  memberships: CustomerGroupMembership[],
 ): boolean {
   if (profile.customerScope === "individual") {
     return profile.customerId === customer.id;
   }
-  const group = customerGroups.find((g) => g.name === profile.customerGroup);
-  if (!group) return false;
-  return customerGroupMemberships.some(
-    (m) => m.customerId === customer.id && m.customerGroupId === group.id,
+  if (!profile.customerGroupId) return false;
+  return memberships.some(
+    (m) => m.customerId === customer.id && m.customerGroupId === profile.customerGroupId,
   );
 }
 
@@ -78,11 +77,14 @@ function profileCoversProduct(
 export function resolvePrice(
   customer: Customer,
   product: Product,
-  profiles: PricingProfile[],
+  profiles: (PricingProfile & { customerGroupId?: string })[],
+  memberships: CustomerGroupMembership[],
 ): ResolveResult | NoMatchResult {
   const matching = profiles.filter(
     (p) =>
-      profileCoversCustomer(p, customer) && profileCoversProduct(p, product),
+      profileCoversCustomer(p, customer, memberships) &&
+      profileCoversProduct(p, product) &&
+      p.items.some((i) => i.productId === product.id),
   );
   console.log("matching: ", matching);
 
@@ -97,7 +99,6 @@ export function resolvePrice(
     .map((p) => ({ profile: p, score: customerScore(p) + productScore(p) }))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
-      // Tie-break: newest profile wins
       return (
         new Date(b.profile.createdAt).getTime() -
         new Date(a.profile.createdAt).getTime()
@@ -111,7 +112,7 @@ export function resolvePrice(
   const customerScopeLabel =
     winner.customerScope === "individual"
       ? `individual customer (${customer.name})`
-      : `customer group (${winner.customerGroup!})`;
+      : `customer group (${(winner as { customerGroupName?: string }).customerGroupName ?? winner.customerGroupId ?? "unknown"})`;
 
   const productScopeLabel =
     winner.productScope === "product" || winner.productScope === "explicit"

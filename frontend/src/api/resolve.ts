@@ -37,7 +37,12 @@ export async function resolvePrice(
   customerId: string,
   productId: string,
 ): Promise<ResolveResult | NoMatchResult> {
-  const res = await fetch(`${BASE}/api/resolve?customerId=${customerId}&productId=${productId}`)
+  const res = await fetch(`${BASE}/api/resolve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ customerId, productId }),
+  })
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(body.error ?? 'Failed to resolve price')
@@ -49,9 +54,12 @@ export async function resolvePriceBatch(
   customerId: string,
   productIds: string[],
 ): Promise<BatchResolveItem[]> {
-  const res = await fetch(
-    `${BASE}/api/resolve/batch?customerId=${customerId}&productIds=${productIds.join(',')}`,
-  )
+  const res = await fetch(`${BASE}/api/resolve/batch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ customerId, productIds }),
+  })
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(body.error ?? 'Failed to resolve prices')

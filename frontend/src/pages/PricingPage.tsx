@@ -49,7 +49,7 @@ export function PricingPage() {
   // Customer scope
   const [customerScope, setCustomerScope] = useState<CustomerScopeType>('individual')
   const [customerId, setCustomerId] = useState('')
-  const [customerGroupName, setCustomerGroupName] = useState('')
+  const [customerGroupId, setCustomerGroupId] = useState('')
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false)
   const [customerGroupSelectOpen, setCustomerGroupSelectOpen] = useState(false)
 
@@ -148,7 +148,7 @@ export function PricingPage() {
   )
 
   const customerReady =
-    customerScope === 'individual' ? customerId !== '' : customerGroupName !== ''
+    customerScope === 'individual' ? customerId !== '' : customerGroupId !== ''
 
   const productReady =
     productScope === 'all'
@@ -176,7 +176,7 @@ export function PricingPage() {
       const customerPayload =
         customerScope === 'individual'
           ? { customerScope: 'individual' as const, customerId }
-          : { customerScope: 'group' as const, customerGroup: customerGroupName }
+          : { customerScope: 'group' as const, customerGroupId }
 
       const productPayload = (() => {
         switch (productScope) {
@@ -205,7 +205,7 @@ export function PricingPage() {
       toast.success('Pricing profile saved!')
       setProfileName('')
       setCustomerId('')
-      setCustomerGroupName('')
+      setCustomerGroupId('')
       setSelectedIds(new Set())
       setAdjustmentValueStr('')
       setFilterSubCategory('')
@@ -220,7 +220,7 @@ export function PricingPage() {
   const selectedCustomerLabel =
     customerScope === 'individual'
       ? customers.find((c) => c.id === customerId)?.name
-      : customerGroupName || undefined
+      : customerGroups.find((g) => g.id === customerGroupId)?.name || undefined
 
   return (
     <div className="space-y-6">
@@ -262,7 +262,7 @@ export function PricingPage() {
                     <button
                       key={s}
                       type="button"
-                      onClick={() => { setCustomerScope(s); setCustomerId(''); setCustomerGroupName('') }}
+                      onClick={() => { setCustomerScope(s); setCustomerId(''); setCustomerGroupId('') }}
                       className={cn(
                         'flex-1 px-3 py-1.5 text-xs font-medium transition-colors',
                         customerScope === s
@@ -315,8 +315,8 @@ export function PricingPage() {
                       onOpenChange={(open) => {
                         setCustomerGroupSelectOpen(open)
                       }}
-                      value={customerGroupName || undefined}
-                      onValueChange={(v) => setCustomerGroupName(v ?? '')}>
+                      value={customerGroupId || undefined}
+                      onValueChange={(v) => setCustomerGroupId(v ?? '')}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select group…" />
                       </SelectTrigger>
@@ -327,7 +327,7 @@ export function PricingPage() {
                           </div>
                         ) : (
                           customerGroups.map((c) => (
-                            <SelectItem key={c.id} value={c.name}>
+                            <SelectItem key={c.id} value={c.id}>
                               {c.name}
                             </SelectItem>
                           ))
