@@ -8,6 +8,20 @@ jobs:
   typecheck:
     name: TypeScript
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -27,8 +41,8 @@ jobs:
         run: npx prisma generate
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          
       - name: Typecheck backend
         run: npm run typecheck
         working-directory: backend
