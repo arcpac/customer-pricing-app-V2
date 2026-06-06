@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 function App() {
   const [page, setPage] = useState<Page>('pricing')
   const [authed, setAuthed] = useState<boolean | null>(null)
-
+  debugger
   useEffect(() => {
     checkAuth().then(setAuthed)
   }, [])

@@ -15,7 +15,7 @@ const COOKIE_OPTS = {
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body as { email?: string; password?: string }
-  console.log('req.body', req.body)
+
   if (!email || !password) {
     res.status(400).json({ error: "email and password required" })
     return

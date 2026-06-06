@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
-const BASE = 'http://localhost:4000'
+const BASE = import.meta.env.VITE_API_URL ?? '';
 
 interface Props {
   onLogin: () => void
@@ -38,34 +38,42 @@ export function LoginPage({ onLogin }: Props) {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-background">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border border-border p-8">
-        <h1 className="text-xl font-semibold">Sign in</h1>
-        <div className="space-y-1">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="admin@foboh.com"
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
-        </Button>
-      </form>
+    <div
+      className="grid h-screen grid-cols-12"
+      style={{ background: 'linear-gradient(135deg, #DCEAFF 0%, #147D73 100%)' }}
+    >
+      <div className="col-span-4 flex flex-col justify-center px-10 bg-white/10 backdrop-blur-md border-r border-white/20">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <h1 className="text-xl font-semibold">Sign in</h1>
+          <div className="space-y-1">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              className='bg-white'
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@foboh.com"
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              className='bg-white'
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </form>
+      </div>
+      <div className="col-span-8" />
     </div>
   )
 }
