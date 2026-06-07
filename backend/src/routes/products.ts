@@ -53,7 +53,7 @@ const router = Router()
 router.get("/", async (req: Request, res: Response) => {
   const { search, sku, subCategory, segment, brand } = req.query as Record<string, string | undefined>
 
-  type Where = Parameters<typeof prisma.product.findMany>[0]["where"]
+  type Where = NonNullable<Parameters<typeof prisma.product.findMany>[0]>["where"]
   const where: Where = {}
 
   if (search) {

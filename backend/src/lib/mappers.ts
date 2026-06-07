@@ -76,7 +76,7 @@ export function mapProfile(p: PrismaProfileWithRelations): PricingProfile & {
     p.customerGroupId != null
       ? {
           customerGroupId: p.customerGroupId,
-          customerGroupName: p.customerGroup?.name,
+          ...(p.customerGroup?.name != null ? { customerGroupName: p.customerGroup.name } : {}),
         }
       : {}
   const withFilter =
