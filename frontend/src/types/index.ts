@@ -1,77 +1,81 @@
 export interface Product {
-  id: string
-  title: string
-  sku: string
-  subCategory: string
-  segment: string
-  brand: string
-  basePrice: number
+  id: string;
+  title: string;
+  sku: string;
+  subCategory: string;
+  segment: string;
+  brand: string;
+  basePrice: number;
 }
 
 export interface Customer {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface CustomerGroup {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface CustomerGroupMembership {
-  customerId: string
-  customerGroupId: string
+  customerId: string;
+  customerGroupId: string;
 }
 
-export type AdjustmentType = 'fixed' | 'percentage' | 'custom_price'
-export type AdjustmentDirection = 'increase' | 'decrease'
+export type AdjustmentType = 'fixed' | 'percentage' | 'custom_price';
+export type AdjustmentDirection = 'increase' | 'decrease';
 
 export interface Adjustment {
-  type: AdjustmentType
-  direction: AdjustmentDirection
-  value: number
+  type: AdjustmentType;
+  direction: AdjustmentDirection;
+  value: number;
 }
 
 export interface ProductFilters {
-  search?: string
-  sku?: string
-  subCategory?: string
-  segment?: string
-  brand?: string
+  search?: string;
+  sku?: string;
+  subCategory?: string;
+  segment?: string;
+  brand?: string;
 }
 
 export interface PricingProfilePayload {
-  name: string
-  customerScope: 'individual' | 'group'
-  customerId?: string
-  customerGroupId?: string
-  adjustmentType: AdjustmentType
-  adjustmentDirection: AdjustmentDirection
-  adjustmentValue: number
-  productScope: 'product' | 'explicit' | 'subCategory' | 'segment' | 'all'
-  productIds?: string[]
-  productFilter?: { subCategory?: string; segment?: string }
+  name: string;
+  customerScope: 'individual' | 'group';
+  customerId?: string;
+  customerGroupId?: string;
+  adjustmentType: AdjustmentType;
+  adjustmentDirection: AdjustmentDirection;
+  adjustmentValue: number;
+  productScope: 'product' | 'explicit' | 'subCategory' | 'segment' | 'all';
+  productIds?: string[];
+  productFilter?: { subCategory?: string; segment?: string };
 }
 
 export interface PricingProfileItem {
-  productId: string
-  name: string,
-  basePrice: number
-  adjustedPrice: number
+  productId: string;
+  name: string;
+  basePrice: number;
+  adjustedPrice: number;
 }
 
 export interface PricingProfile {
-  id: string
-  name: string
-  customerScope: 'individual' | 'group'
-  customerId?: string
-  customerGroupId?: string
-  customerGroupName?: string
-  adjustmentType: AdjustmentType
-  adjustmentDirection: AdjustmentDirection
-  adjustmentValue: number
-  productScope: 'explicit' | 'product' | 'subCategory' | 'segment' | 'all'
-  productFilter?: { productId?: string; subCategory?: string; segment?: string }
-  items: PricingProfileItem[]
-  createdAt: string
+  id: string;
+  name: string;
+  customerScope: 'individual' | 'group';
+  customerId?: string;
+  customerGroupId?: string;
+  customerGroupName?: string;
+  adjustmentType: AdjustmentType;
+  adjustmentDirection: AdjustmentDirection;
+  adjustmentValue: number;
+  productScope: 'explicit' | 'product' | 'subCategory' | 'segment' | 'all';
+  productFilter?: {
+    productId?: string;
+    subCategory?: string;
+    segment?: string;
+  };
+  items: PricingProfileItem[];
+  createdAt: string;
 }

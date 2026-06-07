@@ -1,46 +1,48 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const BASE = import.meta.env.VITE_API_URL ?? '';
 
 interface Props {
-  onLogin: () => void
+  onLogin: () => void;
 }
 
 export function LoginPage({ onLogin }: Props) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       const res = await fetch(`${BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password }),
-      })
+      });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { error?: string }
-        throw new Error(body.error ?? 'Login failed')
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? 'Login failed');
       }
-      onLogin()
+      onLogin();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Login failed')
+      toast.error(err instanceof Error ? err.message : 'Login failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
     <div
       className="grid h-screen grid-cols-12"
-      style={{ background: 'linear-gradient(135deg, #DCEAFF 0%, #147D73 100%)' }}
+      style={{
+        background: 'linear-gradient(135deg, #DCEAFF 0%, #147D73 100%)',
+      }}
     >
       <div className="col-span-4 flex flex-col justify-center px-10 bg-white/10 backdrop-blur-md border-r border-white/20">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,8 +53,8 @@ export function LoginPage({ onLogin }: Props) {
               id="email"
               type="email"
               value={email}
-              className='bg-white'
-              onChange={e => setEmail(e.target.value)}
+              className="bg-white"
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@foboh.com"
               required
             />
@@ -63,8 +65,8 @@ export function LoginPage({ onLogin }: Props) {
               id="password"
               type="password"
               value={password}
-              className='bg-white'
-              onChange={e => setPassword(e.target.value)}
+              className="bg-white"
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
@@ -75,5 +77,5 @@ export function LoginPage({ onLogin }: Props) {
       </div>
       <div className="col-span-8" />
     </div>
-  )
+  );
 }

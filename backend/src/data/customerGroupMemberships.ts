@@ -1,5 +1,4 @@
 export interface CustomerGroupMembership {
-  customerId: string
-  customerGroupId: string
+  customerId: string;
+  customerGroupId: string;
 }
-

@@ -37,7 +37,13 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
-  "exclude": ["node_modules", "dist", "prisma.config.ts", "prisma", "src/generated"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "prisma.config.ts",
+    "prisma",
+    "src/generated"
+  ]
 }

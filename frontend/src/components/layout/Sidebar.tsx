@@ -1,12 +1,12 @@
-import { List, Search, Tag, Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { List, Search, Tag, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export type Page = 'pricing' | 'resolve' | 'profiles' | 'memberships'
+export type Page = 'pricing' | 'resolve' | 'profiles' | 'memberships';
 
 interface SidebarProps {
-  activePage: Page
-  onNavigate: (page: Page) => void
-  className?: string
+  activePage: Page;
+  onNavigate: (page: Page) => void;
+  className?: string;
 }
 
 export function Sidebar({ activePage, onNavigate, className }: SidebarProps) {
@@ -24,21 +24,37 @@ export function Sidebar({ activePage, onNavigate, className }: SidebarProps) {
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
-        <NavBtn active={activePage === 'pricing'} onClick={() => onNavigate('pricing')} icon={<Tag size={16} />}>
+        <NavBtn
+          active={activePage === 'pricing'}
+          onClick={() => onNavigate('pricing')}
+          icon={<Tag size={16} />}
+        >
           Pricing
         </NavBtn>
-        <NavBtn active={activePage === 'resolve'} onClick={() => onNavigate('resolve')} icon={<Search size={16} />}>
+        <NavBtn
+          active={activePage === 'resolve'}
+          onClick={() => onNavigate('resolve')}
+          icon={<Search size={16} />}
+        >
           Resolve Price
         </NavBtn>
-        <NavBtn active={activePage === 'profiles'} onClick={() => onNavigate('profiles')} icon={<List size={16} />}>
+        <NavBtn
+          active={activePage === 'profiles'}
+          onClick={() => onNavigate('profiles')}
+          icon={<List size={16} />}
+        >
           Pricing Profiles
         </NavBtn>
-        <NavBtn active={activePage === 'memberships'} onClick={() => onNavigate('memberships')} icon={<Users size={16} />}>
+        <NavBtn
+          active={activePage === 'memberships'}
+          onClick={() => onNavigate('memberships')}
+          icon={<Users size={16} />}
+        >
           Group Memberships
         </NavBtn>
       </nav>
     </aside>
-  )
+  );
 }
 
 function NavBtn({
@@ -47,10 +63,10 @@ function NavBtn({
   icon,
   children,
 }: {
-  active: boolean
-  onClick: () => void
-  icon: React.ReactNode
-  children: React.ReactNode
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -66,5 +82,5 @@ function NavBtn({
       {icon}
       {children}
     </button>
-  )
+  );
 }

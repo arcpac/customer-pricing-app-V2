@@ -1,16 +1,16 @@
-import { Router } from "express"
-import type { Request, Response } from "express"
-import { prisma } from "../lib/prisma.js"
-import { mapProfile } from "../lib/mappers.js"
-import type { ProductFilter } from "../data/pricingProfiles.js"
-import { computeAdjustedPrice } from "../utils/pricing.js"
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma.js';
+import { mapProfile } from '../lib/mappers.js';
+import type { ProductFilter } from '../data/pricingProfiles.js';
+import { computeAdjustedPrice } from '../utils/pricing.js';
 
-const router = Router()
+const router = Router();
 
 const PROFILE_INCLUDE = {
   items: { include: { product: true } },
   customerGroup: true,
-} as const
+} as const;
 
 /**
  * @openapi
@@ -67,13 +67,13 @@ const PROFILE_INCLUDE = {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", async (_req: Request, res: Response) => {
+router.get('/', async (_req: Request, res: Response) => {
   const profiles = await prisma.pricingProfile.findMany({
     include: PROFILE_INCLUDE,
-    orderBy: { createdAt: "desc" },
-  })
-  res.json(profiles.map(mapProfile))
-})
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json(profiles.map(mapProfile));
+});
 
 /**
  * @openapi
@@ -92,132 +92,206 @@ router.get("/", async (_req: Request, res: Response) => {
  *       404:
  *         description: Not found
  */
-router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const profile = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
     include: PROFILE_INCLUDE,
   });
   if (!profile) {
-    res.status(404).json({ error: "Profile not found" });
+    res.status(404).json({ error: 'Profile not found' });
     return;
   }
   res.json(mapProfile(profile));
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const {
     name,
-    customerScope = "individual",
+    customerScope = 'individual',
     customerId,
     customerGroupId,
     adjustmentType,
     adjustmentDirection,
     adjustmentValue,
-    productScope = "explicit",
+    productScope = 'explicit',
     productFilter,
     productIds,
   } = req.body as {
-    name: string
-    customerScope?: "individual" | "group"
-    customerId?: string
-    customerGroupId?: string
-    adjustmentType: unknown
-    adjustmentDirection: unknown
-    adjustmentValue: unknown
-    productScope?: "explicit" | "product" | "subCategory" | "segment" | "all"
-    productFilter?: ProductFilter
-    productIds?: string[]
-  }
+    name: string;
+    customerScope?: 'individual' | 'group';
+    customerId?: string;
+    customerGroupId?: string;
+    adjustmentType: unknown;
+    adjustmentDirection: unknown;
+    adjustmentValue: unknown;
+    productScope?: 'explicit' | 'product' | 'subCategory' | 'segment' | 'all';
+    productFilter?: ProductFilter;
+    productIds?: string[];
+  };
 
-  if (!name || typeof name !== "string" || name.trim() === "") {
-    res.status(400).json({ error: "name is required" })
-    return
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    res.status(400).json({ error: 'name is required' });
+    return;
   }
-  if (!["individual", "group"].includes(customerScope)) {
-    res.status(400).json({ error: "customerScope must be 'individual' or 'group'" })
-    return
+  if (!['individual', 'group'].includes(customerScope)) {
+    res
+      .status(400)
+      .json({ error: "customerScope must be 'individual' or 'group'" });
+    return;
   }
-  if (!["fixed", "percentage", "custom_price"].includes(adjustmentType as string)) {
-    res.status(400).json({ error: "adjustmentType must be 'fixed', 'percentage', or 'custom_price'" })
-    return
+  if (
+    !['fixed', 'percentage', 'custom_price'].includes(adjustmentType as string)
+  ) {
+    res
+      .status(400)
+      .json({
+        error:
+          "adjustmentType must be 'fixed', 'percentage', or 'custom_price'",
+      });
+    return;
   }
-  if (!["increase", "decrease"].includes(adjustmentDirection as string)) {
-    res.status(400).json({ error: "adjustmentDirection must be 'increase' or 'decrease'" })
-    return
+  if (!['increase', 'decrease'].includes(adjustmentDirection as string)) {
+    res
+      .status(400)
+      .json({ error: "adjustmentDirection must be 'increase' or 'decrease'" });
+    return;
   }
-  if (typeof adjustmentValue !== "number" || adjustmentValue < 0) {
-    res.status(400).json({ error: "adjustmentValue must be a non-negative number" })
-    return
+  if (typeof adjustmentValue !== 'number' || adjustmentValue < 0) {
+    res
+      .status(400)
+      .json({ error: 'adjustmentValue must be a non-negative number' });
+    return;
   }
-  if (!["explicit", "product", "subCategory", "segment", "all"].includes(productScope)) {
-    res.status(400).json({ error: "productScope must be 'explicit', 'product', 'subCategory', 'segment', or 'all'" })
-    return
+  if (
+    !['explicit', 'product', 'subCategory', 'segment', 'all'].includes(
+      productScope,
+    )
+  ) {
+    res.status(400).json({
+      error:
+        "productScope must be 'explicit', 'product', 'subCategory', 'segment', or 'all'",
+    });
+    return;
   }
 
   // Validate customer scope
-  if (customerScope === "individual") {
+  if (customerScope === 'individual') {
     if (!customerId) {
-      res.status(400).json({ error: "customerId is required when customerScope is 'individual'" })
-      return
+      res
+        .status(400)
+        .json({
+          error: "customerId is required when customerScope is 'individual'",
+        });
+      return;
     }
-    const customer = await prisma.customer.findUnique({ where: { id: customerId } })
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+    });
     if (!customer) {
-      res.status(400).json({ error: "Customer not found" })
-      return
+      res.status(400).json({ error: 'Customer not found' });
+      return;
     }
   } else {
-    if (!customerGroupId || typeof customerGroupId !== "string" || customerGroupId.trim() === "") {
-      res.status(400).json({ error: "customerGroupId is required when customerScope is 'group'" })
-      return
+    if (
+      !customerGroupId ||
+      typeof customerGroupId !== 'string' ||
+      customerGroupId.trim() === ''
+    ) {
+      res
+        .status(400)
+        .json({
+          error: "customerGroupId is required when customerScope is 'group'",
+        });
+      return;
     }
-    const group = await prisma.customerGroup.findUnique({ where: { id: customerGroupId } })
+    const group = await prisma.customerGroup.findUnique({
+      where: { id: customerGroupId },
+    });
     if (!group) {
-      res.status(400).json({ error: "Customer group not found" })
-      return
+      res.status(400).json({ error: 'Customer group not found' });
+      return;
     }
   }
 
   // Resolve target products
-  let targetProducts: { id: string; basePrice: number }[]
-  if (productScope === "explicit") {
+  let targetProducts: { id: string; basePrice: number }[];
+  if (productScope === 'explicit') {
     if (!Array.isArray(productIds) || productIds.length === 0) {
-      res.status(400).json({ error: "productIds must be a non-empty array when productScope is 'explicit'" })
-      return
+      res
+        .status(400)
+        .json({
+          error:
+            "productIds must be a non-empty array when productScope is 'explicit'",
+        });
+      return;
     }
-    const rows = await prisma.product.findMany({ where: { id: { in: productIds } } })
-    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
-  } else if (productScope === "product") {
+    const rows = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+    });
+    targetProducts = rows.map((p) => ({
+      id: p.id,
+      basePrice: p.basePrice.toNumber(),
+    }));
+  } else if (productScope === 'product') {
     if (!productFilter?.productId) {
-      res.status(400).json({ error: "productFilter.productId is required when productScope is 'product'" })
-      return
+      res
+        .status(400)
+        .json({
+          error:
+            "productFilter.productId is required when productScope is 'product'",
+        });
+      return;
     }
-    const p = await prisma.product.findUnique({ where: { id: productFilter.productId } })
+    const p = await prisma.product.findUnique({
+      where: { id: productFilter.productId },
+    });
     if (!p) {
-      res.status(400).json({ error: "Product not found" })
-      return
+      res.status(400).json({ error: 'Product not found' });
+      return;
     }
-    targetProducts = [{ id: p.id, basePrice: p.basePrice.toNumber() }]
-  } else if (productScope === "subCategory") {
+    targetProducts = [{ id: p.id, basePrice: p.basePrice.toNumber() }];
+  } else if (productScope === 'subCategory') {
     if (!productFilter?.subCategory) {
-      res.status(400).json({ error: "productFilter.subCategory is required when productScope is 'subCategory'" })
-      return
+      res.status(400).json({
+        error:
+          "productFilter.subCategory is required when productScope is 'subCategory'",
+      });
+      return;
     }
     const rows = await prisma.product.findMany({
-      where: { subCategory: { equals: productFilter.subCategory, mode: "insensitive" } },
-    })
-    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
-  } else if (productScope === "segment") {
+      where: {
+        subCategory: { equals: productFilter.subCategory, mode: 'insensitive' },
+      },
+    });
+    targetProducts = rows.map((p) => ({
+      id: p.id,
+      basePrice: p.basePrice.toNumber(),
+    }));
+  } else if (productScope === 'segment') {
     if (!productFilter?.segment) {
-      res.status(400).json({ error: "productFilter.segment is required when productScope is 'segment'" })
-      return
+      res
+        .status(400)
+        .json({
+          error:
+            "productFilter.segment is required when productScope is 'segment'",
+        });
+      return;
     }
     const rows = await prisma.product.findMany({
-      where: { segment: { equals: productFilter.segment, mode: "insensitive" } },
-    })
-    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
+      where: {
+        segment: { equals: productFilter.segment, mode: 'insensitive' },
+      },
+    });
+    targetProducts = rows.map((p) => ({
+      id: p.id,
+      basePrice: p.basePrice.toNumber(),
+    }));
   } else {
-    const rows = await prisma.product.findMany()
-    targetProducts = rows.map((p) => ({ id: p.id, basePrice: p.basePrice.toNumber() }))
+    const rows = await prisma.product.findMany();
+    targetProducts = rows.map((p) => ({
+      id: p.id,
+      basePrice: p.basePrice.toNumber(),
+    }));
   }
 
   const itemData = targetProducts.map((p) => ({
@@ -225,11 +299,11 @@ router.post("/", async (req: Request, res: Response) => {
     basePrice: p.basePrice,
     adjustedPrice: computeAdjustedPrice(
       p.basePrice,
-      adjustmentType as "fixed" | "percentage" | "custom_price",
-      adjustmentDirection as "increase" | "decrease",
+      adjustmentType as 'fixed' | 'percentage' | 'custom_price',
+      adjustmentDirection as 'increase' | 'decrease',
       adjustmentValue as number,
     ),
-  }))
+  }));
 
   const baseData = {
     name: name.trim(),
@@ -239,24 +313,27 @@ router.post("/", async (req: Request, res: Response) => {
     adjustmentValue: adjustmentValue as number,
     productScope,
     items: { create: itemData },
-  }
+  };
 
-  const customerData = customerScope === "individual"
-    ? { customerId: customerId! }
-    : { customerGroupId: customerGroupId! }
+  const customerData =
+    customerScope === 'individual'
+      ? { customerId: customerId! }
+      : { customerGroupId: customerGroupId! };
 
   const filterData =
-    productFilter != null && productScope !== "all" && productScope !== "explicit"
+    productFilter != null &&
+    productScope !== 'all' &&
+    productScope !== 'explicit'
       ? { productFilter: productFilter as object }
-      : {}
+      : {};
 
   const created = await prisma.pricingProfile.create({
     data: { ...baseData, ...customerData, ...filterData },
     include: PROFILE_INCLUDE,
-  })
+  });
 
-  res.status(201).json(mapProfile(created))
-})
+  res.status(201).json(mapProfile(created));
+});
 
 /**
  * @openapi
@@ -299,20 +376,20 @@ router.post("/", async (req: Request, res: Response) => {
  *       404:
  *         description: Not found
  */
-router.put("/:id", async (req: Request<{id: string}>, res: Response) => {
+router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const existing = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
     include: PROFILE_INCLUDE,
-  })
+  });
   if (!existing) {
-    res.status(404).json({ error: "Profile not found" })
-    return
+    res.status(404).json({ error: 'Profile not found' });
+    return;
   }
 
-  const { name } = req.body as { name: unknown }
-  if (!name || typeof name !== "string" || name.trim() === "") {
-    res.status(400).json({ error: "name is required" })
-    return
+  const { name } = req.body as { name: unknown };
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    res.status(400).json({ error: 'name is required' });
+    return;
   }
 
   const updatedItems = existing.items.map((item) => ({
@@ -320,11 +397,11 @@ router.put("/:id", async (req: Request<{id: string}>, res: Response) => {
     basePrice: item.basePrice.toNumber(),
     adjustedPrice: computeAdjustedPrice(
       item.product.basePrice.toNumber(),
-      existing.adjustmentType as "fixed" | "percentage" | "custom_price",
-      existing.adjustmentDirection as "increase" | "decrease",
+      existing.adjustmentType as 'fixed' | 'percentage' | 'custom_price',
+      existing.adjustmentDirection as 'increase' | 'decrease',
       existing.adjustmentValue.toNumber(),
     ),
-  }))
+  }));
 
   const updated = await prisma.pricingProfile.update({
     where: { id: req.params.id },
@@ -336,21 +413,21 @@ router.put("/:id", async (req: Request<{id: string}>, res: Response) => {
       },
     },
     include: PROFILE_INCLUDE,
-  })
+  });
 
-  res.json(mapProfile(updated))
-})
+  res.json(mapProfile(updated));
+});
 
-router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const existing = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
   });
   if (!existing) {
-    res.status(404).json({ error: "Profile not found" });
+    res.status(404).json({ error: 'Profile not found' });
     return;
   }
   await prisma.pricingProfile.delete({ where: { id: req.params.id } });
   res.status(204).end();
 });
 
-export default router
+export default router;

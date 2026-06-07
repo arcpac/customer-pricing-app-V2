@@ -49,28 +49,28 @@ Example: `"Bondi Cellars — Summer Wine Discount"`
 
 ### Customer Scope
 
-| Scope | Description |
-|---|---|
-| Individual | Targets a single named customer |
-| Group | Targets all customers in a named group |
+| Scope      | Description                            |
+| ---------- | -------------------------------------- |
+| Individual | Targets a single named customer        |
+| Group      | Targets all customers in a named group |
 
 ### Product Scope
 
-| Scope | Description |
-|---|---|
-| One Product | Targets a single product (single-select) |
-| Multiple Products | Targets an explicit list of products (multi-select) |
-| By Sub-Category | Targets all products in a sub-category |
-| By Segment | Targets all products in a segment |
-| All Products | Targets the entire catalogue (dynamic — includes future products) |
+| Scope             | Description                                                       |
+| ----------------- | ----------------------------------------------------------------- |
+| One Product       | Targets a single product (single-select)                          |
+| Multiple Products | Targets an explicit list of products (multi-select)               |
+| By Sub-Category   | Targets all products in a sub-category                            |
+| By Segment        | Targets all products in a segment                                 |
+| All Products      | Targets the entire catalogue (dynamic — includes future products) |
 
 ### Adjustment Types
 
-| Type | Formula | Direction applies? |
-|---|---|---|
-| Fixed $ | `New Price = Base ± Amount` | Yes |
-| Percentage % | `New Price = Base ± (Rate% × Base)` | Yes |
-| Custom Price | `New Price = Target` | No |
+| Type         | Formula                             | Direction applies? |
+| ------------ | ----------------------------------- | ------------------ |
+| Fixed $      | `New Price = Base ± Amount`         | Yes                |
+| Percentage % | `New Price = Base ± (Rate% × Base)` | Yes                |
+| Custom Price | `New Price = Target`                | No                 |
 
 ---
 
@@ -92,14 +92,14 @@ Bondi Cellars is in both groups and orders Koyama Methode Brut Nature NV. Three 
 
 The system scores each matching profile and picks the highest. More specific deals always beat broader ones.
 
-| Dimension | Rule | Score |
-|---|---|---|
-| Customer | Individual customer | 10 |
-| Customer | Customer group | 0 |
-| Product | Exact product (one/explicit) | 10 |
-| Product | Sub-category match | 5 |
-| Product | Segment match | 1 |
-| Product | All products | 0 |
+| Dimension | Rule                         | Score |
+| --------- | ---------------------------- | ----- |
+| Customer  | Individual customer          | 10    |
+| Customer  | Customer group               | 0     |
+| Product   | Exact product (one/explicit) | 10    |
+| Product   | Sub-category match           | 5     |
+| Product   | Segment match                | 1     |
+| Product   | All products                 | 0     |
 
 **Total Score = Customer Score + Product Score**
 
@@ -110,16 +110,19 @@ Profile C above: Individual (10) + Exact product (10) = **20** — beats A (1) a
 ### Adjustment Calculation Examples
 
 **Fixed**
+
 ```
 Base Price: $120 | Adjustment: −$15 | New Price: $105
 ```
 
 **Percentage**
+
 ```
 Base Price: $100 | Adjustment: −10% | New Price: $90
 ```
 
 **Custom Price**
+
 ```
 Base Price: $130 | Target: $95 | New Price: $95
 ```
@@ -151,29 +154,29 @@ Base Price: $130 | Target: $95 | New Price: $95
 7. Click **Save Profile**
 
 Save is blocked until:
+
 - Profile name is filled
 - A customer or group is selected
 - At least one product is selected (except All Products scope)
 - Adjustment value > 0
 - No products result in a $0 price
 
-
 ## API Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/products` | List products; filter via `search`, `sku`, `subCategory`, `segment`, `brand` query params |
-| GET | `/api/customers` | List all customers with group memberships |
-| GET | `/api/customer-groups` | List all customer groups |
-| GET | `/api/pricing-profiles` | List all pricing profiles |
-| GET | `/api/pricing-profiles/:id` | Get profile by ID |
-| POST | `/api/pricing-profiles` | Create pricing profile; validates customer, resolves products, snapshots items |
-| PUT | `/api/pricing-profiles/:id` | Update profile name; recomputes items at current base prices |
-| DELETE | `/api/pricing-profiles/:id` | Delete profile |
-| GET | `/api/resolve` | Resolve price for one customer + product (`?customerId=X&productId=Y`) |
-| GET | `/api/resolve/batch` | Batch resolve (`?customerId=X&productIds=A,B,C`) |
-| GET | `/api/health` | Backend health check |
-| GET | `/api-docs` | Swagger UI |
+| Method | Path                        | Description                                                                               |
+| ------ | --------------------------- | ----------------------------------------------------------------------------------------- |
+| GET    | `/api/products`             | List products; filter via `search`, `sku`, `subCategory`, `segment`, `brand` query params |
+| GET    | `/api/customers`            | List all customers with group memberships                                                 |
+| GET    | `/api/customer-groups`      | List all customer groups                                                                  |
+| GET    | `/api/pricing-profiles`     | List all pricing profiles                                                                 |
+| GET    | `/api/pricing-profiles/:id` | Get profile by ID                                                                         |
+| POST   | `/api/pricing-profiles`     | Create pricing profile; validates customer, resolves products, snapshots items            |
+| PUT    | `/api/pricing-profiles/:id` | Update profile name; recomputes items at current base prices                              |
+| DELETE | `/api/pricing-profiles/:id` | Delete profile                                                                            |
+| GET    | `/api/resolve`              | Resolve price for one customer + product (`?customerId=X&productId=Y`)                    |
+| GET    | `/api/resolve/batch`        | Batch resolve (`?customerId=X&productIds=A,B,C`)                                          |
+| GET    | `/api/health`               | Backend health check                                                                      |
+| GET    | `/api-docs`                 | Swagger UI                                                                                |
 
 ### Resolve Response
 

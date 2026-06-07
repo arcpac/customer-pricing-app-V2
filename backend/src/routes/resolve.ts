@@ -1,15 +1,20 @@
-import { Router } from "express"
-import type { Request, Response } from "express"
-import { prisma } from "../lib/prisma.js"
-import { mapCustomer, mapProduct, mapProfile, mapMembership } from "../lib/mappers.js"
-import { resolvePrice } from "../utils/resolver.js"
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma.js';
+import {
+  mapCustomer,
+  mapProduct,
+  mapProfile,
+  mapMembership,
+} from '../lib/mappers.js';
+import { resolvePrice } from '../utils/resolver.js';
 
-const router = Router()
+const router = Router();
 
 const PROFILE_INCLUDE = {
   items: { include: { product: true } },
   customerGroup: true,
-} as const
+} as const;
 
 /**
  * @openapi
@@ -38,41 +43,42 @@ const PROFILE_INCLUDE = {
  *       404:
  *         description: Customer or product not found
  */
-router.post("/", async (req: Request, res: Response) => {
-  const { customerId, productId } = req.body as Record<string, string>
+router.post('/', async (req: Request, res: Response) => {
+  const { customerId, productId } = req.body as Record<string, string>;
 
   if (!customerId) {
-    res.status(400).json({ error: "customerId is required" })
-    return
+    res.status(400).json({ error: 'customerId is required' });
+    return;
   }
   if (!productId) {
-    res.status(400).json({ error: "productId is required" })
-    return
+    res.status(400).json({ error: 'productId is required' });
+    return;
   }
 
-  const [customerRow, productRow, profileRows, membershipRows] = await Promise.all([
-    prisma.customer.findUnique({ where: { id: customerId } }),
-    prisma.product.findUnique({ where: { id: productId } }),
-    prisma.pricingProfile.findMany({ include: PROFILE_INCLUDE }),
-    prisma.customerGroupMembership.findMany(),
-  ])
+  const [customerRow, productRow, profileRows, membershipRows] =
+    await Promise.all([
+      prisma.customer.findUnique({ where: { id: customerId } }),
+      prisma.product.findUnique({ where: { id: productId } }),
+      prisma.pricingProfile.findMany({ include: PROFILE_INCLUDE }),
+      prisma.customerGroupMembership.findMany(),
+    ]);
 
   if (!customerRow) {
-    res.status(404).json({ error: "Customer not found" })
-    return
+    res.status(404).json({ error: 'Customer not found' });
+    return;
   }
   if (!productRow) {
-    res.status(404).json({ error: "Product not found" })
-    return
+    res.status(404).json({ error: 'Product not found' });
+    return;
   }
 
-  const customer = mapCustomer(customerRow)
-  const product = mapProduct(productRow)
-  const profiles = profileRows.map(mapProfile)
-  const memberships = membershipRows.map(mapMembership)
+  const customer = mapCustomer(customerRow);
+  const product = mapProduct(productRow);
+  const profiles = profileRows.map(mapProfile);
+  const memberships = membershipRows.map(mapMembership);
 
-  res.json(resolvePrice(customer, product, profiles, memberships))
-})
+  res.json(resolvePrice(customer, product, profiles, memberships));
+});
 
 /**
  * @openapi
@@ -98,43 +104,53 @@ router.post("/", async (req: Request, res: Response) => {
  *       404:
  *         description: Customer not found
  */
-router.post("/batch", async (req: Request, res: Response) => {
-  const { customerId, productIds: rawProductIds } = req.body as { customerId: string; productIds: unknown }
+router.post('/batch', async (req: Request, res: Response) => {
+  const { customerId, productIds: rawProductIds } = req.body as {
+    customerId: string;
+    productIds: unknown;
+  };
 
   if (!customerId) {
-    res.status(400).json({ error: "customerId is required" })
-    return
+    res.status(400).json({ error: 'customerId is required' });
+    return;
   }
   if (!Array.isArray(rawProductIds) || rawProductIds.length === 0) {
-    res.status(400).json({ error: "productIds must be a non-empty array" })
-    return
+    res.status(400).json({ error: 'productIds must be a non-empty array' });
+    return;
   }
-  const productIds = rawProductIds as string[]
+  const productIds = rawProductIds as string[];
 
-  const [customerRow, productRows, profileRows, membershipRows] = await Promise.all([
-    prisma.customer.findUnique({ where: { id: customerId } }),
-    prisma.product.findMany({ where: { id: { in: productIds } } }),
-    prisma.pricingProfile.findMany({ include: PROFILE_INCLUDE }),
-    prisma.customerGroupMembership.findMany(),
-  ])
+  const [customerRow, productRows, profileRows, membershipRows] =
+    await Promise.all([
+      prisma.customer.findUnique({ where: { id: customerId } }),
+      prisma.product.findMany({ where: { id: { in: productIds } } }),
+      prisma.pricingProfile.findMany({ include: PROFILE_INCLUDE }),
+      prisma.customerGroupMembership.findMany(),
+    ]);
 
   if (!customerRow) {
-    res.status(404).json({ error: "Customer not found" })
-    return
+    res.status(404).json({ error: 'Customer not found' });
+    return;
   }
 
-  const customer = mapCustomer(customerRow)
-  const profiles = profileRows.map(mapProfile)
-  const memberships = membershipRows.map(mapMembership)
-  const productMap = new Map(productRows.map((p) => [p.id, p]))
+  const customer = mapCustomer(customerRow);
+  const profiles = profileRows.map(mapProfile);
+  const memberships = membershipRows.map(mapMembership);
+  const productMap = new Map(productRows.map((p) => [p.id, p]));
 
   const results = productIds.map((productId) => {
-    const productRow = productMap.get(productId)
+    const productRow = productMap.get(productId);
     if (!productRow) {
-      return { productId, title: null, basePrice: null, resolvedPrice: null, message: "Product not found" }
+      return {
+        productId,
+        title: null,
+        basePrice: null,
+        resolvedPrice: null,
+        message: 'Product not found',
+      };
     }
-    const product = mapProduct(productRow)
-    const resolved = resolvePrice(customer, product, profiles, memberships)
+    const product = mapProduct(productRow);
+    const resolved = resolvePrice(customer, product, profiles, memberships);
     const base = {
       productId,
       title: product.title,
@@ -143,21 +159,23 @@ router.post("/batch", async (req: Request, res: Response) => {
       segment: product.segment,
       brand: product.brand,
       basePrice: product.basePrice,
-    }
+    };
     if (resolved.resolvedPrice === null) {
-      return { ...base, ...resolved }
+      return { ...base, ...resolved };
     }
-    const sourceProfile = profiles.find((p) => p.id === resolved.sourceProfileId)
+    const sourceProfile = profiles.find(
+      (p) => p.id === resolved.sourceProfileId,
+    );
     return {
       ...base,
       ...resolved,
       adjustmentType: sourceProfile?.adjustmentType,
       adjustmentDirection: sourceProfile?.adjustmentDirection,
       adjustmentValue: sourceProfile?.adjustmentValue,
-    }
-  })
+    };
+  });
 
-  res.json(results)
-})
+  res.json(results);
+});
 
-export default router
+export default router;

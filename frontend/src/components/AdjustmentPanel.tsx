@@ -1,15 +1,15 @@
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
-import type { Adjustment } from '@/types'
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import type { Adjustment } from '@/types';
 
 interface AdjustmentPanelProps {
-  type: Adjustment['type']
-  direction: Adjustment['direction']
-  valueStr: string
-  onTypeChange: (type: Adjustment['type']) => void
-  onDirectionChange: (direction: Adjustment['direction']) => void
-  onValueChange: (v: string) => void
+  type: Adjustment['type'];
+  direction: Adjustment['direction'];
+  valueStr: string;
+  onTypeChange: (type: Adjustment['type']) => void;
+  onDirectionChange: (direction: Adjustment['direction']) => void;
+  onValueChange: (v: string) => void;
 }
 
 export function AdjustmentPanel({
@@ -25,13 +25,22 @@ export function AdjustmentPanel({
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Type</Label>
         <div className="flex overflow-hidden rounded-md border">
-          <ToggleBtn active={type === 'fixed'} onClick={() => onTypeChange('fixed')}>
+          <ToggleBtn
+            active={type === 'fixed'}
+            onClick={() => onTypeChange('fixed')}
+          >
             Fixed $
           </ToggleBtn>
-          <ToggleBtn active={type === 'percentage'} onClick={() => onTypeChange('percentage')}>
+          <ToggleBtn
+            active={type === 'percentage'}
+            onClick={() => onTypeChange('percentage')}
+          >
             Percent %
           </ToggleBtn>
-          <ToggleBtn active={type === 'custom_price'} onClick={() => onTypeChange('custom_price')}>
+          <ToggleBtn
+            active={type === 'custom_price'}
+            onClick={() => onTypeChange('custom_price')}
+          >
             Custom Price
           </ToggleBtn>
         </div>
@@ -41,10 +50,16 @@ export function AdjustmentPanel({
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Direction</Label>
           <div className="flex overflow-hidden rounded-md border">
-            <ToggleBtn active={direction === 'increase'} onClick={() => onDirectionChange('increase')}>
+            <ToggleBtn
+              active={direction === 'increase'}
+              onClick={() => onDirectionChange('increase')}
+            >
               Increase
             </ToggleBtn>
-            <ToggleBtn active={direction === 'decrease'} onClick={() => onDirectionChange('decrease')}>
+            <ToggleBtn
+              active={direction === 'decrease'}
+              onClick={() => onDirectionChange('decrease')}
+            >
               Decrease
             </ToggleBtn>
           </div>
@@ -53,7 +68,11 @@ export function AdjustmentPanel({
 
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">
-          {type === 'fixed' ? 'Fixed Amount ($)' : type === 'percentage' ? 'Rate (%)' : 'Target Price ($)'}
+          {type === 'fixed'
+            ? 'Fixed Amount ($)'
+            : type === 'percentage'
+              ? 'Rate (%)'
+              : 'Target Price ($)'}
         </Label>
         <Input
           type="number"
@@ -66,7 +85,7 @@ export function AdjustmentPanel({
         />
       </div>
     </div>
-  )
+  );
 }
 
 function ToggleBtn({
@@ -74,9 +93,9 @@ function ToggleBtn({
   onClick,
   children,
 }: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -91,5 +110,5 @@ function ToggleBtn({
     >
       {children}
     </button>
-  )
+  );
 }

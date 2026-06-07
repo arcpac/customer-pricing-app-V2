@@ -1,24 +1,28 @@
-import { LayoutList, Package, Plus, Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { LayoutList, Package, Plus, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export type View = 'products' | 'profiles' | 'customers' | 'create'
+export type View = 'products' | 'profiles' | 'customers' | 'create';
 
 interface NavItem {
-  label: string
-  view: View
-  icon: React.ReactNode
+  label: string;
+  view: View;
+  icon: React.ReactNode;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Products', view: 'products', icon: <Package size={16} /> },
-  { label: 'Pricing Profiles', view: 'profiles', icon: <LayoutList size={16} /> },
+  {
+    label: 'Pricing Profiles',
+    view: 'profiles',
+    icon: <LayoutList size={16} />,
+  },
   { label: 'Customers', view: 'customers', icon: <Users size={16} /> },
   { label: 'Create Profile', view: 'create', icon: <Plus size={16} /> },
-]
+];
 
 interface SidebarProps {
-  activeView: View
-  onNavigate: (view: View) => void
+  activeView: View;
+  onNavigate: (view: View) => void;
 }
 
 export function Sidebar({ activeView, onNavigate }: SidebarProps) {
@@ -48,5 +52,5 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
         </span>
       </footer>
     </aside>
-  )
+  );
 }
