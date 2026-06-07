@@ -92,17 +92,17 @@ router.get("/", async (_req: Request, res: Response) => {
  *       404:
  *         description: Not found
  */
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const profile = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
     include: PROFILE_INCLUDE,
-  })
+  });
   if (!profile) {
-    res.status(404).json({ error: "Profile not found" })
-    return
+    res.status(404).json({ error: "Profile not found" });
+    return;
   }
-  res.json(mapProfile(profile))
-})
+  res.json(mapProfile(profile));
+});
 
 router.post("/", async (req: Request, res: Response) => {
   const {
@@ -299,7 +299,7 @@ router.post("/", async (req: Request, res: Response) => {
  *       404:
  *         description: Not found
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req: Request<{id: string}>, res: Response) => {
   const existing = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
     include: PROFILE_INCLUDE,
@@ -341,14 +341,16 @@ router.put("/:id", async (req: Request, res: Response) => {
   res.json(mapProfile(updated))
 })
 
-router.delete("/:id", async (req: Request, res: Response) => {
-  const existing = await prisma.pricingProfile.findUnique({ where: { id: req.params.id } })
+router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
+  const existing = await prisma.pricingProfile.findUnique({
+    where: { id: req.params.id },
+  });
   if (!existing) {
-    res.status(404).json({ error: "Profile not found" })
-    return
+    res.status(404).json({ error: "Profile not found" });
+    return;
   }
-  await prisma.pricingProfile.delete({ where: { id: req.params.id } })
-  res.status(204).end()
-})
+  await prisma.pricingProfile.delete({ where: { id: req.params.id } });
+  res.status(204).end();
+});
 
 export default router
