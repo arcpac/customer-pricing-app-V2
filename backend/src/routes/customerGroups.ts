@@ -1,8 +1,8 @@
-import { Router } from "express"
-import type { Request, Response } from "express"
-import { prisma } from "../lib/prisma.js"
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma.js';
 
-const router = Router()
+const router = Router();
 
 /**
  * @openapi
@@ -23,9 +23,11 @@ const router = Router()
  *                   id: { type: string }
  *                   name: { type: string }
  */
-router.get("/", async (_req: Request, res: Response) => {
-  const groups = await prisma.customerGroup.findMany({ orderBy: { name: "asc" } })
-  res.json(groups)
-})
+router.get('/', async (_req: Request, res: Response) => {
+  const groups = await prisma.customerGroup.findMany({
+    orderBy: { name: 'asc' },
+  });
+  res.json(groups);
+});
 
-export default router
+export default router;

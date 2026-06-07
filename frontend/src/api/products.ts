@@ -1,21 +1,23 @@
-import type { Product, ProductFilters } from "@/types";
-import { sleep } from "@/utils/sleep";
+import type { Product, ProductFilters } from '@/types';
+import { sleep } from '@/utils/sleep';
 
-const BASE = "http://localhost:4000";
+const BASE = 'http://localhost:4000';
 
 export async function getProducts(
   filters?: ProductFilters,
 ): Promise<Product[]> {
   await sleep(500);
   const params = new URLSearchParams();
-  if (filters?.search) params.set("search", filters.search);
-  if (filters?.sku) params.set("sku", filters.sku);
-  if (filters?.subCategory) params.set("subCategory", filters.subCategory);
-  if (filters?.segment) params.set("segment", filters.segment);
-  if (filters?.brand) params.set("brand", filters.brand);
+  if (filters?.search) params.set('search', filters.search);
+  if (filters?.sku) params.set('sku', filters.sku);
+  if (filters?.subCategory) params.set('subCategory', filters.subCategory);
+  if (filters?.segment) params.set('segment', filters.segment);
+  if (filters?.brand) params.set('brand', filters.brand);
 
   const qs = params.toString();
-  const res = await fetch(`${BASE}/api/products${qs ? `?${qs}` : ""}`, { credentials: "include" });
-  if (!res.ok) throw new Error("Failed to fetch products");
+  const res = await fetch(`${BASE}/api/products${qs ? `?${qs}` : ''}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to fetch products');
   return res.json() as Promise<Product[]>;
 }

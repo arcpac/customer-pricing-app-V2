@@ -1,36 +1,36 @@
-const BASE = 'http://localhost:4000'
+const BASE = 'http://localhost:4000';
 
 export interface ResolveResult {
-  resolvedPrice: number
-  sourceProfileId: string
-  sourceProfileName: string
-  explanation: string
+  resolvedPrice: number;
+  sourceProfileId: string;
+  sourceProfileName: string;
+  explanation: string;
 }
 
 export interface NoMatchResult {
-  resolvedPrice: null
-  message: string
+  resolvedPrice: null;
+  message: string;
 }
 
 export interface BatchResolveItem {
-  productId: string
-  title: string
-  sku: string
-  subCategory: string
-  segment: string
-  brand: string
-  basePrice: number
-  resolvedPrice: number | null
-  sourceProfileId?: string
-  sourceProfileName?: string
-  explanation?: string
-  matchReasonCustomer?: string
-  matchReasonProduct?: string
-  matchScore?: number
-  message?: string
-  adjustmentType?: 'fixed' | 'percentage' | 'custom_price'
-  adjustmentDirection?: 'increase' | 'decrease'
-  adjustmentValue?: number
+  productId: string;
+  title: string;
+  sku: string;
+  subCategory: string;
+  segment: string;
+  brand: string;
+  basePrice: number;
+  resolvedPrice: number | null;
+  sourceProfileId?: string;
+  sourceProfileName?: string;
+  explanation?: string;
+  matchReasonCustomer?: string;
+  matchReasonProduct?: string;
+  matchScore?: number;
+  message?: string;
+  adjustmentType?: 'fixed' | 'percentage' | 'custom_price';
+  adjustmentDirection?: 'increase' | 'decrease';
+  adjustmentValue?: number;
 }
 
 export async function resolvePrice(
@@ -42,12 +42,12 @@ export async function resolvePrice(
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ customerId, productId }),
-  })
+  });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { error?: string }
-    throw new Error(body.error ?? 'Failed to resolve price')
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'Failed to resolve price');
   }
-  return res.json() as Promise<ResolveResult | NoMatchResult>
+  return res.json() as Promise<ResolveResult | NoMatchResult>;
 }
 
 export async function resolvePriceBatch(
@@ -59,10 +59,10 @@ export async function resolvePriceBatch(
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ customerId, productIds }),
-  })
+  });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { error?: string }
-    throw new Error(body.error ?? 'Failed to resolve prices')
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'Failed to resolve prices');
   }
-  return res.json() as Promise<BatchResolveItem[]>
+  return res.json() as Promise<BatchResolveItem[]>;
 }

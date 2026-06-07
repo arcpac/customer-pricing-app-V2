@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogClose,
@@ -9,21 +9,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import type { Customer } from '@/types'
+} from '@/components/ui/select';
+import type { Customer } from '@/types';
 
 interface SaveProfileDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  customers: Customer[]
-  onSave: (name: string, customerId: string) => Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  customers: Customer[];
+  onSave: (name: string, customerId: string) => Promise<void>;
 }
 
 export function SaveProfileDialog({
@@ -32,24 +32,24 @@ export function SaveProfileDialog({
   customers,
   onSave,
 }: SaveProfileDialogProps) {
-  const [name, setName] = useState('')
-  const [customerId, setCustomerId] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [name, setName] = useState('');
+  const [customerId, setCustomerId] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const canSave = name.trim().length > 0 && customerId.length > 0
+  const canSave = name.trim().length > 0 && customerId.length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canSave) return
-    setSaving(true)
+    e.preventDefault();
+    if (!canSave) return;
+    setSaving(true);
     try {
-      await onSave(name.trim(), customerId)
-      setName('')
-      setCustomerId('')
+      await onSave(name.trim(), customerId);
+      setName('');
+      setCustomerId('');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,7 +70,10 @@ export function SaveProfileDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Customer *</Label>
-            <Select value={customerId || null} onValueChange={(v) => setCustomerId(v ?? '')}>
+            <Select
+              value={customerId || null}
+              onValueChange={(v) => setCustomerId(v ?? '')}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a customer" />
               </SelectTrigger>
@@ -94,5 +97,5 @@ export function SaveProfileDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

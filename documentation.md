@@ -32,11 +32,11 @@ npm run dev
 
 ### Access Points
 
-| Service | URL |
-|---|---|
-| App | http://localhost:5173 |
-| API | http://localhost:4000 |
-| Swagger UI | http://localhost:4000/api-docs |
+| Service      | URL                              |
+| ------------ | -------------------------------- |
+| App          | http://localhost:5173            |
+| API          | http://localhost:4000            |
+| Swagger UI   | http://localhost:4000/api-docs   |
 | Health check | http://localhost:4000/api/health |
 
 No `.env` file needed — all defaults work out of the box. Backend `PORT` defaults to `4000`.
@@ -84,46 +84,50 @@ customer-pricing-app/
 ```
 
 ---
+
 ## Key Reference Files
 
 ### `product-description.md`
+
 The **complete product specification** — all flows, adjustment formulas, pricing rules, API contracts, and demo data scenarios. Read this first to understand the full scope of the app.
 
 ### `transcripts/`
-Phase-by-phase conversation history between the developer and Claude. Each file (e.g. `phase-4.md`, `phase5.md`) captures the decisions, code, and reasoning from each dev session. Useful for understanding *why* something was built a certain way.
+
+Phase-by-phase conversation history between the developer and Claude. Each file (e.g. `phase-4.md`, `phase5.md`) captures the decisions, code, and reasoning from each dev session. Useful for understanding _why_ something was built a certain way.
 
 ### `CLAUDE.md`
+
 Controls Claude's response behavior in this project — sets conventions for commit messages (concise, grammar optional), PR comment format (checkbox TODOs), and plan output style. Update this file to adjust how Claude collaborates on this project.
 
 ---
 
 ## Pages
 
-| Page | Purpose |
-|---|---|
-| **Pricing** | Create pricing profiles — set scope, select products, configure adjustment, preview, save |
-| **Resolve** | Test price resolution — pick a customer + products, click Resolve, see which profile wins |
-| **Pricing Profiles** | List, edit, delete existing profiles |
-| **Customer Group Memberships** | Assign customers to groups |
+| Page                           | Purpose                                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------------------- |
+| **Pricing**                    | Create pricing profiles — set scope, select products, configure adjustment, preview, save |
+| **Resolve**                    | Test price resolution — pick a customer + products, click Resolve, see which profile wins |
+| **Pricing Profiles**           | List, edit, delete existing profiles                                                      |
+| **Customer Group Memberships** | Assign customers to groups                                                                |
 
 ---
 
 ## API Reference
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/products` | List products; filter by `search`, `sku`, `subCategory`, `segment`, `brand` |
-| GET | `/api/customers` | List customers with group memberships |
-| GET | `/api/customer-groups` | List customer groups |
-| GET | `/api/pricing-profiles` | List all profiles |
-| GET | `/api/pricing-profiles/:id` | Get profile by ID |
-| POST | `/api/pricing-profiles` | Create profile; snapshots items at current base prices |
-| PUT | `/api/pricing-profiles/:id` | Update profile name; recomputes items |
-| DELETE | `/api/pricing-profiles/:id` | Delete profile |
-| GET | `/api/resolve?customerId=X&productId=Y` | Resolve price for one customer + product |
-| GET | `/api/resolve/batch?customerId=X&productIds=A,B` | Batch resolve multiple products |
-| GET | `/api/health` | Health check |
-| GET | `/api-docs` | Swagger UI |
+| Method | Path                                             | Description                                                                 |
+| ------ | ------------------------------------------------ | --------------------------------------------------------------------------- |
+| GET    | `/api/products`                                  | List products; filter by `search`, `sku`, `subCategory`, `segment`, `brand` |
+| GET    | `/api/customers`                                 | List customers with group memberships                                       |
+| GET    | `/api/customer-groups`                           | List customer groups                                                        |
+| GET    | `/api/pricing-profiles`                          | List all profiles                                                           |
+| GET    | `/api/pricing-profiles/:id`                      | Get profile by ID                                                           |
+| POST   | `/api/pricing-profiles`                          | Create profile; snapshots items at current base prices                      |
+| PUT    | `/api/pricing-profiles/:id`                      | Update profile name; recomputes items                                       |
+| DELETE | `/api/pricing-profiles/:id`                      | Delete profile                                                              |
+| GET    | `/api/resolve?customerId=X&productId=Y`          | Resolve price for one customer + product                                    |
+| GET    | `/api/resolve/batch?customerId=X&productIds=A,B` | Batch resolve multiple products                                             |
+| GET    | `/api/health`                                    | Health check                                                                |
+| GET    | `/api-docs`                                      | Swagger UI                                                                  |
 
 Full request/response schemas: http://localhost:4000/api-docs
 
@@ -133,34 +137,34 @@ Full request/response schemas: http://localhost:4000/api-docs
 
 ### Products
 
-| ID | Title | SKU | Sub-Category | Base Price |
-|---|---|---|---|---|
-| prod_1 | High Garden Pinot Noir 2021 | HGVPIN216 | Red | $279.06 |
-| prod_2 | Koyama Methode Brut Nature NV | KOYBRUNV6 | Sparkling | $120.00 |
-| prod_3 | Koyama Riesling 2018 | KOYNR1837 | Port/Dessert | $215.04 |
-| prod_4 | Koyama Tussock Riesling 2019 | KOYRIE19 | White | $215.04 |
-| prod_5 | Lacourte-Godbillon Brut Cru NV | LACBNATNV6 | Sparkling | $409.32 |
+| ID     | Title                          | SKU        | Sub-Category | Base Price |
+| ------ | ------------------------------ | ---------- | ------------ | ---------- |
+| prod_1 | High Garden Pinot Noir 2021    | HGVPIN216  | Red          | $279.06    |
+| prod_2 | Koyama Methode Brut Nature NV  | KOYBRUNV6  | Sparkling    | $120.00    |
+| prod_3 | Koyama Riesling 2018           | KOYNR1837  | Port/Dessert | $215.04    |
+| prod_4 | Koyama Tussock Riesling 2019   | KOYRIE19   | White        | $215.04    |
+| prod_5 | Lacourte-Godbillon Brut Cru NV | LACBNATNV6 | Sparkling    | $409.32    |
 
 ### Customers & Groups
 
-| Customer | Groups |
-|---|---|
-| The Cellar Door | — |
-| Harbour View Restaurant | — |
-| Blue Mountains Bistro | — |
-| Fitzroy Food & Wine | — |
-| Manly Beach Bar | — |
-| Bondi Cellars | Independent Retailers, VIP |
+| Customer                | Groups                     |
+| ----------------------- | -------------------------- |
+| The Cellar Door         | —                          |
+| Harbour View Restaurant | —                          |
+| Blue Mountains Bistro   | —                          |
+| Fitzroy Food & Wine     | —                          |
+| Manly Beach Bar         | —                          |
+| Bondi Cellars           | Independent Retailers, VIP |
 
 ### Pre-seeded Profiles (Overlap Scenario)
 
 Three pricing profiles are pre-loaded on startup to demonstrate overlap resolution.
 
-| Profile | Rule | Customer Scope | Product Scope | Score |
-|---|---|---|---|---|
-| A | −10% all Wine | Independent Retailers (group) | Segment | 1 |
-| B | −$15 Sparkling Wine | VIP (group) | Sub-category | 5 |
-| C | Custom $95 on Koyama Brut | Bondi Cellars (individual) | Exact product | **20** ← wins |
+| Profile | Rule                      | Customer Scope                | Product Scope | Score         |
+| ------- | ------------------------- | ----------------------------- | ------------- | ------------- |
+| A       | −10% all Wine             | Independent Retailers (group) | Segment       | 1             |
+| B       | −$15 Sparkling Wine       | VIP (group)                   | Sub-category  | 5             |
+| C       | Custom $95 on Koyama Brut | Bondi Cellars (individual)    | Exact product | **20** ← wins |
 
 ---
 
@@ -168,9 +172,9 @@ Three pricing profiles are pre-loaded on startup to demonstrate overlap resoluti
 
 ### Adjustment Types
 
-| Type | Formula |
-|---|---|
-| Fixed $ | `New = Base ± amount` |
+| Type         | Formula                       |
+| ------------ | ----------------------------- |
+| Fixed $      | `New = Base ± amount`         |
 | Percentage % | `New = Base ± (rate% × Base)` |
 | Custom Price | `New = target` (ignores base) |
 
@@ -180,14 +184,14 @@ Prices are floored at `$0.00`. Saving is blocked if any product would reach `$0`
 
 When multiple profiles match a customer + product, the highest-scoring profile wins. Ties go to the newer profile.
 
-| Dimension | Rule | Score |
-|---|---|---|
-| Customer | Individual | +10 |
-| Customer | Group | +0 |
-| Product | Exact (one / explicit list) | +10 |
-| Product | Sub-category | +5 |
-| Product | Segment | +1 |
-| Product | All products | +0 |
+| Dimension | Rule                        | Score |
+| --------- | --------------------------- | ----- |
+| Customer  | Individual                  | +10   |
+| Customer  | Group                       | +0    |
+| Product   | Exact (one / explicit list) | +10   |
+| Product   | Sub-category                | +5    |
+| Product   | Segment                     | +1    |
+| Product   | All products                | +0    |
 
 For full pricing rules and edge cases, see [`product-description.md`](./product-description.md).
 
@@ -195,20 +199,20 @@ For full pricing rules and edge cases, see [`product-description.md`](./product-
 
 ## Tech Stack
 
-| Layer | Stack |
-|---|---|
-| Frontend | React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query |
-| Backend | Node.js, Express 5, TypeScript, tsx (dev), swagger-jsdoc |
-| Data | In-memory (no database) |
-| Notifications | Sonner |
-| Icons | Lucide React |
+| Layer         | Stack                                                               |
+| ------------- | ------------------------------------------------------------------- |
+| Frontend      | React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query |
+| Backend       | Node.js, Express 5, TypeScript, tsx (dev), swagger-jsdoc            |
+| Data          | In-memory (no database)                                             |
+| Notifications | Sonner                                                              |
+| Icons         | Lucide React                                                        |
 
 ---
 
 ## Development Tools
 
-| Tool | Purpose |
-|---|---|
-| VS Code | Primary editor |
-| Claude Code | AI pair programming (Claude Code CLI) |
-| Swagger UI | API explorer — http://localhost:4000/api-docs |
+| Tool        | Purpose                                       |
+| ----------- | --------------------------------------------- |
+| VS Code     | Primary editor                                |
+| Claude Code | AI pair programming (Claude Code CLI)         |
+| Swagger UI  | API explorer — http://localhost:4000/api-docs |

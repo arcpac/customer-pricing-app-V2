@@ -1,5 +1,4 @@
 export interface CustomerGroup {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
-

@@ -1,7 +1,7 @@
-import type { PricingProfile } from "../data/pricingProfiles.js"
-import type { Product } from "../data/products.js"
-import type { Customer } from "../data/customers.js"
-import type { CustomerGroupMembership } from "../data/customerGroupMemberships.js"
+import type { PricingProfile } from '../data/pricingProfiles.js';
+import type { Product } from '../data/products.js';
+import type { Customer } from '../data/customers.js';
+import type { CustomerGroupMembership } from '../data/customerGroupMemberships.js';
 
 export interface ResolveResult {
   resolvedPrice: number;
@@ -19,19 +19,19 @@ export interface NoMatchResult {
 }
 
 function customerScore(profile: PricingProfile): number {
-  return profile.customerScope === "individual" ? 10 : 0;
+  return profile.customerScope === 'individual' ? 10 : 0;
 }
 
 function productScore(profile: PricingProfile): number {
   switch (profile.productScope) {
-    case "product":
-    case "explicit":
+    case 'product':
+    case 'explicit':
       return 10;
-    case "subCategory":
+    case 'subCategory':
       return 5;
-    case "segment":
+    case 'segment':
       return 1;
-    case "all":
+    case 'all':
       return 0;
   }
 }
@@ -41,12 +41,14 @@ function profileCoversCustomer(
   customer: Customer,
   memberships: CustomerGroupMembership[],
 ): boolean {
-  if (profile.customerScope === "individual") {
+  if (profile.customerScope === 'individual') {
     return profile.customerId === customer.id;
   }
   if (!profile.customerGroupId) return false;
   return memberships.some(
-    (m) => m.customerId === customer.id && m.customerGroupId === profile.customerGroupId,
+    (m) =>
+      m.customerId === customer.id &&
+      m.customerGroupId === profile.customerGroupId,
   );
 }
 
@@ -55,18 +57,18 @@ function profileCoversProduct(
   product: Product,
 ): boolean {
   switch (profile.productScope) {
-    case "all":
+    case 'all':
       return true;
-    case "explicit":
+    case 'explicit':
       return profile.items.some((i) => i.productId === product.id);
-    case "product":
+    case 'product':
       return profile.productFilter?.productId === product.id;
-    case "subCategory":
+    case 'subCategory':
       return (
         profile.productFilter?.subCategory?.toLowerCase() ===
         product.subCategory.toLowerCase()
       );
-    case "segment":
+    case 'segment':
       return (
         profile.productFilter?.segment?.toLowerCase() ===
         product.segment.toLowerCase()
@@ -86,12 +88,12 @@ export function resolvePrice(
       profileCoversProduct(p, product) &&
       p.items.some((i) => i.productId === product.id),
   );
-  console.log("matching: ", matching);
+  console.log('matching: ', matching);
 
   if (matching.length === 0) {
     return {
       resolvedPrice: null,
-      message: "No pricing profile matches this customer and product",
+      message: 'No pricing profile matches this customer and product',
     };
   }
 
@@ -104,32 +106,32 @@ export function resolvePrice(
         new Date(a.profile.createdAt).getTime()
       );
     });
-  console.log("Scored: ", scored);
+  console.log('Scored: ', scored);
 
   const { profile: winner, score } = scored[0]!;
   const item = winner.items.find((i) => i.productId === product.id)!;
 
   const customerScopeLabel =
-    winner.customerScope === "individual"
+    winner.customerScope === 'individual'
       ? `individual customer (${customer.name})`
-      : `customer group (${(winner as { customerGroupName?: string }).customerGroupName ?? winner.customerGroupId ?? "unknown"})`;
+      : `customer group (${(winner as { customerGroupName?: string }).customerGroupName ?? winner.customerGroupId ?? 'unknown'})`;
 
   const productScopeLabel =
-    winner.productScope === "product" || winner.productScope === "explicit"
+    winner.productScope === 'product' || winner.productScope === 'explicit'
       ? `exact product match (${product.title})`
-      : winner.productScope === "subCategory"
+      : winner.productScope === 'subCategory'
         ? `sub-category match (${product.subCategory})`
-        : winner.productScope === "segment"
+        : winner.productScope === 'segment'
           ? `segment match (${product.segment})`
-          : "all products";
+          : 'all products';
 
   const losers =
     scored.length > 1
-      ? ` over ${scored.length - 1} other matching profile${scored.length > 2 ? "s" : ""} (scores: ${scored
+      ? ` over ${scored.length - 1} other matching profile${scored.length > 2 ? 's' : ''} (scores: ${scored
           .slice(1)
           .map((s) => `${s.profile.name}: ${s.score}`)
-          .join(", ")})`
-      : "";
+          .join(', ')})`
+      : '';
 
   const explanation =
     `"${winner.name}" applied: ${customerScopeLabel} + ${productScopeLabel} → $${item.adjustedPrice.toFixed(2)}` +

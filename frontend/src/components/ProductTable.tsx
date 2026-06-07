@@ -1,4 +1,4 @@
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -6,13 +6,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import type { Product } from '@/types'
+} from '@/components/ui/table';
+import type { Product } from '@/types';
 
 interface ProductTableProps {
-  products: Product[]
-  selectedIds: Set<string>
-  onSelectionChange: (ids: Set<string>) => void
+  products: Product[];
+  selectedIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
 }
 
 export function ProductTable({
@@ -20,33 +20,34 @@ export function ProductTable({
   selectedIds,
   onSelectionChange,
 }: ProductTableProps) {
-  const allSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id))
-  const someSelected = products.some((p) => selectedIds.has(p.id))
-  const headerIndeterminate = someSelected && !allSelected
+  const allSelected =
+    products.length > 0 && products.every((p) => selectedIds.has(p.id));
+  const someSelected = products.some((p) => selectedIds.has(p.id));
+  const headerIndeterminate = someSelected && !allSelected;
 
   const toggleAll = () => {
     if (allSelected) {
       // Deselect all filtered rows
-      const next = new Set(selectedIds)
-      products.forEach((p) => next.delete(p.id))
-      onSelectionChange(next)
+      const next = new Set(selectedIds);
+      products.forEach((p) => next.delete(p.id));
+      onSelectionChange(next);
     } else {
       // Select all filtered rows
-      const next = new Set(selectedIds)
-      products.forEach((p) => next.add(p.id))
-      onSelectionChange(next)
+      const next = new Set(selectedIds);
+      products.forEach((p) => next.add(p.id));
+      onSelectionChange(next);
     }
-  }
+  };
 
   const toggleRow = (id: string) => {
-    const next = new Set(selectedIds)
+    const next = new Set(selectedIds);
     if (next.has(id)) {
-      next.delete(id)
+      next.delete(id);
     } else {
-      next.add(id)
+      next.add(id);
     }
-    onSelectionChange(next)
-  }
+    onSelectionChange(next);
+  };
 
   return (
     <div className="rounded-lg border overflow-hidden">
@@ -81,7 +82,7 @@ export function ProductTable({
             </TableRow>
           ) : (
             products.map((product) => {
-              const isSelected = selectedIds.has(product.id)
+              const isSelected = selectedIds.has(product.id);
               return (
                 <TableRow
                   key={product.id}
@@ -96,18 +97,28 @@ export function ProductTable({
                       aria-label={`Select ${product.title}`}
                     />
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{product.sku}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {product.sku}
+                  </TableCell>
                   <TableCell className="font-medium">{product.title}</TableCell>
-                  <TableCell className="text-muted-foreground">{product.subCategory}</TableCell>
-                  <TableCell className="text-muted-foreground">{product.segment}</TableCell>
-                  <TableCell className="text-muted-foreground">{product.brand}</TableCell>
-                  <TableCell className="text-right">${product.basePrice.toFixed(2)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {product.subCategory}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {product.segment}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {product.brand}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    ${product.basePrice.toFixed(2)}
+                  </TableCell>
                 </TableRow>
-              )
+              );
             })
           )}
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
