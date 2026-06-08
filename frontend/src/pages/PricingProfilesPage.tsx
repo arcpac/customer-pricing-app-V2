@@ -94,6 +94,8 @@ export function PricingProfilesPage() {
             <TableHead>Product Scope</TableHead>
             <TableHead>Rule</TableHead>
             <TableHead className="text-right">Items</TableHead>
+            <TableHead>Effective From</TableHead>
+            <TableHead>Effective To</TableHead>
             <TableHead>Created</TableHead>
           </TableRow>
         </TableHeader>
@@ -126,6 +128,12 @@ export function PricingProfilesPage() {
                   </TableCell>
                   <TableCell className="text-right text-sm">
                     {p.items.length}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {p.effectiveFrom ? new Date(p.effectiveFrom).toLocaleDateString() : '—'}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {p.effectiveTo ? new Date(p.effectiveTo).toLocaleDateString() : '—'}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(p.createdAt).toLocaleDateString()}

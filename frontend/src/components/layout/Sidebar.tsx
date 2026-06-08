@@ -1,7 +1,7 @@
-import { List, Search, Tag, Users } from 'lucide-react';
+import { ClipboardList, List, Search, Tag, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type Page = 'pricing' | 'resolve' | 'profiles' | 'memberships';
+export type Page = 'pricing' | 'resolve' | 'profiles' | 'memberships' | 'resolved-prices';
 
 interface SidebarProps {
   activePage: Page;
@@ -51,6 +51,13 @@ export function Sidebar({ activePage, onNavigate, className }: SidebarProps) {
           icon={<Users size={16} />}
         >
           Group Memberships
+        </NavBtn>
+        <NavBtn
+          active={activePage === 'resolved-prices'}
+          onClick={() => onNavigate('resolved-prices')}
+          icon={<ClipboardList size={16} />}
+        >
+          Resolved Prices
         </NavBtn>
       </nav>
     </aside>

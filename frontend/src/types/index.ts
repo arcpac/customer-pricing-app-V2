@@ -51,6 +51,8 @@ export interface PricingProfilePayload {
   productScope: 'product' | 'explicit' | 'subCategory' | 'segment' | 'all';
   productIds?: string[];
   productFilter?: { subCategory?: string; segment?: string };
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
 }
 
 export interface PricingProfileItem {
@@ -76,6 +78,21 @@ export interface PricingProfile {
     subCategory?: string;
     segment?: string;
   };
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
   items: PricingProfileItem[];
+  createdAt: string;
+}
+
+export interface ResolvedPriceLog {
+  id: string;
+  customerId: string;
+  productId: string;
+  productName: string | null;
+  resolvedPrice: number | null;
+  sourceProfileId: string | null;
+  sourceProfileName: string | null;
+  matchScore: number | null;
+  profileExpired: boolean;
   createdAt: string;
 }

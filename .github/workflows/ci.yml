@@ -50,3 +50,26 @@ jobs:
       - name: Typecheck frontend
         run: npm run typecheck
         working-directory: frontend
+  test:
+    name: Unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install backend deps
+        run: npm ci
+        working-directory: backend
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: Run backend tests
+        run: npm test
+        working-directory: backend

@@ -6,6 +6,7 @@ import { PricingPage } from '@/pages/PricingPage';
 import { ResolvePage } from '@/pages/ResolvePage';
 import { PricingProfilesPage } from '@/pages/PricingProfilesPage';
 import { CustomerGroupMembershipsPage } from '@/pages/CustomerGroupMembershipsPage';
+import { ResolvedPricesPage } from '@/pages/ResolvedPricesPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { checkAuth, logout } from '@/api/auth';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,7 @@ function App() {
         {page === 'resolve' && <ResolvePage />}
         {page === 'profiles' && <PricingProfilesPage />}
         {page === 'memberships' && <CustomerGroupMembershipsPage />}
+        {page === 'resolved-prices' && <ResolvedPricesPage />}
       </main>
       <Toaster />
     </div>
