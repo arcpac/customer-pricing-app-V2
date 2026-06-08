@@ -69,6 +69,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
       - name: Run backend tests
         run: npm test
         working-directory: backend
