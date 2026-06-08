@@ -108,7 +108,7 @@ describe('resolvePrice', () => {
   });
 
   it('returns no match for group profile when customerGroupId is missing', () => {
-    const profile = makeProfile({ customerScope: 'group', customerId: undefined });
+    const profile = makeProfile({ customerScope: 'group' });
     const result = resolvePrice(customer, product, [profile], []);
     expect(result.resolvedPrice).toBeNull();
   });
