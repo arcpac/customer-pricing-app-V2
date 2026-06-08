@@ -4,7 +4,7 @@ import { computeAdjustedPrice } from '../utils/pricing.js';
 describe('computeAdjustedPrice', () => {
   describe('fixed', () => {
     it('increases by fixed amount', () => {
-      expect(computeAdjustedPrice(100, 'fixed', 'increase', 10)).toBe(111);
+      expect(computeAdjustedPrice(100, 'fixed', 'increase', 10)).toBe(110);
     });
     it('decreases by fixed amount', () => {
       expect(computeAdjustedPrice(100, 'fixed', 'decrease', 10)).toBe(90);

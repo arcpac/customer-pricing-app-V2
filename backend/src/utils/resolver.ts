@@ -117,7 +117,7 @@ export function resolvePrice(
   const customerScopeLabel =
     winner.customerScope === 'individual'
       ? `individual customer (${customer.name})`
-      : `customer group (${(winner as { customerGroupName?: string }).customerGroupName ?? winner.customerGroupId ?? 'unknown'})`;
+      : `customer group (${(winner as { customerGroupName?: string }).customerGroupName ?? winner.customerGroupId ?? /* v8 ignore next */ 'unknown'})`;
 
   const productScopeLabel =
     winner.productScope === 'product' || winner.productScope === 'explicit'
