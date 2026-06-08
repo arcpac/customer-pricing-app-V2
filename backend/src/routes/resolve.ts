@@ -8,6 +8,7 @@ import {
   mapMembership,
 } from '../lib/mappers.js';
 import { resolvePrice } from '../utils/resolver.js';
+import type { ResolveResult } from '../utils/resolver.js';
 
 const router = Router();
 
@@ -77,7 +78,22 @@ router.post('/', async (req: Request, res: Response) => {
   const profiles = profileRows.map(mapProfile);
   const memberships = membershipRows.map(mapMembership);
 
-  res.json(resolvePrice(customer, product, profiles, memberships));
+  const result = resolvePrice(customer, product, profiles, memberships);
+  if (result.resolvedPrice !== null) {
+    const r = result as ResolveResult;
+    prisma.resolvedPriceLog
+      .create({
+        data: {
+          customerId,
+          productId,
+          resolvedPrice: r.resolvedPrice,
+          sourceProfileId: r.sourceProfileId,
+          matchScore: r.matchScore,
+        },
+      })
+      .catch(console.error);
+  }
+  res.json(result);
 });
 
 /**
@@ -175,7 +191,43 @@ router.post('/batch', async (req: Request, res: Response) => {
     };
   });
 
+  const logData = results
+    .filter((r) => r.resolvedPrice !== null && 'sourceProfileId' in r)
+    .map((r) => ({
+      customerId,
+      productId: r.productId,
+      resolvedPrice: r.resolvedPrice as number,
+      sourceProfileId: r.sourceProfileId as string,
+      matchScore: (r as { matchScore?: number }).matchScore ?? null,
+    }));
+
+  if (logData.length > 0) {
+    try {
+      const result = await prisma.resolvedPriceLog.createMany({ data: logData });
+      console.log('batch save result: ', result)
+    } catch (err) {
+      console.error(err);
+    }
+  }
   res.json(results);
+});
+
+router.get('/history', async (req: Request, res: Response) => {
+  const { customerId, productId } = req.query as Record<string, string | undefined>;
+  if (!customerId) {
+    res.status(400).json({ error: 'customerId is required' });
+    return;
+  }
+  if (!productId) {
+    res.status(400).json({ error: 'productId is required' });
+    return;
+  }
+  const logs = await prisma.resolvedPriceLog.findMany({
+    where: { customerId, productId },
+    orderBy: { createdAt: 'desc' },
+  });
+  console.log('LOGS: ', logs)
+  res.json(logs);
 });
 
 export default router;

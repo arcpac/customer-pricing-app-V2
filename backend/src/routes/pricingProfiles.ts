@@ -92,6 +92,19 @@ router.get('/', async (_req: Request, res: Response) => {
  *       404:
  *         description: Not found
  */
+router.get('/:id/audit', async (req: Request<{ id: string }>, res: Response) => {
+  const profile = await prisma.pricingProfile.findUnique({ where: { id: req.params.id } });
+  if (!profile) {
+    res.status(404).json({ error: 'Profile not found' });
+    return;
+  }
+  const logs = await prisma.profileAuditLog.findMany({
+    where: { profileId: req.params.id },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json(logs.map(({ id, action, payload, createdAt }) => ({ id, action, payload, createdAt })));
+});
+
 router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const profile = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
@@ -332,7 +345,11 @@ router.post('/', async (req: Request, res: Response) => {
     include: PROFILE_INCLUDE,
   });
 
-  res.status(201).json(mapProfile(created));
+  const mappedCreated = mapProfile(created);
+  prisma.profileAuditLog
+    .create({ data: { profileId: created.id, action: 'create', payload: mappedCreated as object } })
+    .catch(console.error);
+  res.status(201).json(mappedCreated);
 });
 
 /**
@@ -415,6 +432,9 @@ router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
     include: PROFILE_INCLUDE,
   });
 
+  prisma.profileAuditLog
+    .create({ data: { profileId: req.params.id, action: 'update', payload: req.body as object } })
+    .catch(console.error);
   res.json(mapProfile(updated));
 });
 
@@ -427,6 +447,9 @@ router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
     return;
   }
   await prisma.pricingProfile.delete({ where: { id: req.params.id } });
+  prisma.profileAuditLog
+    .create({ data: { profileId: req.params.id, action: 'delete', payload: { id: req.params.id } } })
+    .catch(console.error);
   res.status(204).end();
 });
 
