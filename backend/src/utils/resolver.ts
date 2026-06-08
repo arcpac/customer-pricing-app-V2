@@ -82,8 +82,11 @@ export function resolvePrice(
   profiles: (PricingProfile & { customerGroupId?: string })[],
   memberships: CustomerGroupMembership[],
 ): ResolveResult | NoMatchResult {
+  const now = new Date();
   const matching = profiles.filter(
     (p) =>
+      (!p.effectiveFrom || new Date(p.effectiveFrom) <= now) &&
+      (!p.effectiveTo || new Date(p.effectiveTo) >= now) &&
       profileCoversCustomer(p, customer, memberships) &&
       profileCoversProduct(p, product) &&
       p.items.some((i) => i.productId === product.id),

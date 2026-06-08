@@ -73,6 +73,8 @@ export function mapProfile(p: PrismaProfileWithRelations): PricingProfile & {
     productScope: p.productScope as ProductScope,
     items: p.items.map(mapItem),
     createdAt: p.createdAt.toISOString(),
+    effectiveFrom: p.effectiveFrom?.toISOString() ?? null,
+    effectiveTo: p.effectiveTo?.toISOString() ?? null,
   };
   const withCustomer = p.customerId != null ? { customerId: p.customerId } : {};
   const withGroup =

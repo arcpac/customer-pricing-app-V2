@@ -71,6 +71,8 @@ model PricingProfile {
   adjustmentValue     Decimal              @db.Decimal(10, 4)
   productScope        String
   productFilter       Json?
+  effectiveFrom       DateTime?
+  effectiveTo         DateTime?
   items               PricingProfileItem[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
