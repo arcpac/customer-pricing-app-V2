@@ -292,11 +292,16 @@ export function PricingPage() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <p className="text-xs text-muted-foreground">Pages / Pricing</p>
+        <h1 className="text-2xl font-bold text-foreground mt-0.5">Pricing</h1>
+      </div>
+
       {/* Section 1: Setup Profile */}
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-2xl bg-white shadow-sm">
         <button
           type="button"
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-muted/40 transition-colors rounded-lg"
+          className="w-full flex items-center justify-between px-6 py-4 text-base font-bold transition-colors rounded-2xl"
           onClick={() => setSetupOpen((o) => !o)}
         >
           <span>Setup Profile</span>
@@ -311,7 +316,7 @@ export function PricingPage() {
         </button>
 
         {setupOpen && (
-          <div className="px-4 pb-4 pt-3 border-t space-y-4">
+          <div className="px-6 pb-6 pt-4 border-t border-gray-100 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">
@@ -451,10 +456,10 @@ export function PricingPage() {
       </div>
 
       {/* Section 2: Setup Product Pricing */}
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-2xl bg-white shadow-sm">
         <button
           type="button"
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-muted/40 transition-colors rounded-lg"
+          className="w-full flex items-center justify-between px-6 py-4 text-base font-bold transition-colors rounded-2xl"
           onClick={() => setProductPricingOpen((o) => !o)}
         >
           <span>Setup Product Pricing</span>
@@ -484,7 +489,7 @@ export function PricingPage() {
         </button>
 
         {productPricingOpen && (
-          <div className="px-4 pb-4 pt-3 border-t space-y-4">
+          <div className="px-6 pb-6 pt-4 border-t border-gray-100 space-y-4">
             {/* Product scope selector */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
@@ -604,9 +609,11 @@ export function PricingPage() {
         )}
       </div>
 
-      <Button disabled={!canSave || saving} onClick={handleSave}>
-        {saving ? 'Saving…' : 'Save Profile'}
-      </Button>
+      <div className="flex justify-end">
+        <Button disabled={!canSave || saving} onClick={handleSave} className="px-6">
+          {saving ? 'Saving…' : 'Save Profile'}
+        </Button>
+      </div>
     </div>
   );
 }

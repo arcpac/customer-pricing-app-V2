@@ -50,11 +50,11 @@ export function ProductTable({
   };
 
   return (
-    <div className="rounded-lg border overflow-hidden">
+    <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-10">
+          <TableRow className="bg-white border-b border-gray-100">
+            <TableHead className="w-10 py-3 px-4">
               <Checkbox
                 checked={allSelected}
                 indeterminate={headerIndeterminate}
@@ -62,12 +62,12 @@ export function ProductTable({
                 aria-label="Select all"
               />
             </TableHead>
-            <TableHead className="w-32">SKU</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Sub-category</TableHead>
-            <TableHead>Segment</TableHead>
-            <TableHead>Brand</TableHead>
-            <TableHead className="text-right">Base Price</TableHead>
+            <TableHead className="w-32 py-3 px-4 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">SKU</TableHead>
+            <TableHead className="py-3 px-4 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Title</TableHead>
+            <TableHead className="py-3 px-4 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Sub-category</TableHead>
+            <TableHead className="py-3 px-4 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Segment</TableHead>
+            <TableHead className="py-3 px-4 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Brand</TableHead>
+            <TableHead className="py-3 px-4 text-right text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Base Price</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -87,30 +87,30 @@ export function ProductTable({
                 <TableRow
                   key={product.id}
                   data-state={isSelected ? 'selected' : undefined}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-slate-50 border-b border-gray-100 last:border-0"
                   onClick={() => toggleRow(product.id)}
                 >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleRow(product.id)}
                       aria-label={`Select ${product.title}`}
                     />
                   </TableCell>
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="py-3 px-4 font-mono text-xs">
                     {product.sku}
                   </TableCell>
-                  <TableCell className="font-medium">{product.title}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="py-3 px-4 font-medium">{product.title}</TableCell>
+                  <TableCell className="py-3 px-4 text-muted-foreground">
                     {product.subCategory}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="py-3 px-4 text-muted-foreground">
                     {product.segment}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="py-3 px-4 text-muted-foreground">
                     {product.brand}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="py-3 px-4 text-right">
                     ${product.basePrice.toFixed(2)}
                   </TableCell>
                 </TableRow>

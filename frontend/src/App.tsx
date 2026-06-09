@@ -36,7 +36,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="flex h-screen bg-slate-50 text-foreground">
       <Sidebar activePage={page} onNavigate={setPage} />
       <main className="flex-1 ml-56 overflow-auto p-6">
         <div className="mb-4 flex justify-end">

@@ -21,10 +21,10 @@ export function AdjustmentPanel({
   onValueChange,
 }: AdjustmentPanelProps) {
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-lg border p-4 bg-muted/30">
+    <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-gray-100 p-5 bg-white shadow-sm">
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Type</Label>
-        <div className="flex overflow-hidden rounded-md border">
+        <Label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Type</Label>
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-full">
           <ToggleBtn
             active={type === 'fixed'}
             onClick={() => onTypeChange('fixed')}
@@ -48,8 +48,8 @@ export function AdjustmentPanel({
 
       {type !== 'custom_price' && (
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Direction</Label>
-          <div className="flex overflow-hidden rounded-md border">
+          <Label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Direction</Label>
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-full">
             <ToggleBtn
               active={direction === 'increase'}
               onClick={() => onDirectionChange('increase')}
@@ -67,7 +67,7 @@ export function AdjustmentPanel({
       )}
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
+        <Label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
           {type === 'fixed'
             ? 'Fixed Amount ($)'
             : type === 'percentage'
@@ -102,10 +102,10 @@ function ToggleBtn({
       type="button"
       onClick={onClick}
       className={cn(
-        'px-3 py-1.5 text-xs font-medium transition-colors',
+        'px-4 py-1.5 text-xs font-medium transition-colors rounded-full',
         active
-          ? 'bg-primary text-primary-foreground'
-          : 'bg-background text-foreground hover:bg-muted',
+          ? 'bg-white shadow-sm text-foreground font-semibold'
+          : 'text-muted-foreground hover:text-foreground',
       )}
     >
       {children}
