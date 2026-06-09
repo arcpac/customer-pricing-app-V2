@@ -31,6 +31,8 @@ export interface PricingProfile {
   adjustmentValue: number;
   productScope: ProductScope;
   productFilter?: ProductFilter;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
   items: PricingProfileItem[];
   createdAt: string;
 }

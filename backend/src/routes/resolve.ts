@@ -8,7 +8,6 @@ import {
   mapMembership,
 } from '../lib/mappers.js';
 import { resolvePrice } from '../utils/resolver.js';
-import type { ResolveResult } from '../utils/resolver.js';
 
 const router = Router();
 
@@ -79,20 +78,6 @@ router.post('/', async (req: Request, res: Response) => {
   const memberships = membershipRows.map(mapMembership);
 
   const result = resolvePrice(customer, product, profiles, memberships);
-  if (result.resolvedPrice !== null) {
-    const r = result as ResolveResult;
-    prisma.resolvedPriceLog
-      .create({
-        data: {
-          customerId,
-          productId,
-          resolvedPrice: r.resolvedPrice,
-          sourceProfileId: r.sourceProfileId,
-          matchScore: r.matchScore,
-        },
-      })
-      .catch(console.error);
-  }
   res.json(result);
 });
 
@@ -191,43 +176,89 @@ router.post('/batch', async (req: Request, res: Response) => {
     };
   });
 
-  const logData = results
-    .filter((r) => r.resolvedPrice !== null && 'sourceProfileId' in r)
-    .map((r) => ({
-      customerId,
-      productId: r.productId,
-      resolvedPrice: r.resolvedPrice as number,
-      sourceProfileId: r.sourceProfileId as string,
-      matchScore: (r as { matchScore?: number }).matchScore ?? null,
-    }));
-
-  if (logData.length > 0) {
-    try {
-      const result = await prisma.resolvedPriceLog.createMany({ data: logData });
-      console.log('batch save result: ', result)
-    } catch (err) {
-      console.error(err);
-    }
-  }
   res.json(results);
 });
 
+router.post('/save', async (req: Request, res: Response) => {
+  const { customerId, results: rawResults } = req.body as {
+    customerId: unknown;
+    results: unknown;
+  };
+
+  if (!customerId || typeof customerId !== 'string') {
+    res.status(400).json({ error: 'customerId is required' });
+    return;
+  }
+  if (!Array.isArray(rawResults) || rawResults.length === 0) {
+    res.status(400).json({ error: 'results must be a non-empty array' });
+    return;
+  }
+
+  const data = (rawResults as { productId: string; resolvedPrice: number; sourceProfileId?: string; matchScore?: number }[]).map((r) => ({
+    customerId,
+    productId: r.productId,
+    resolvedPrice: r.resolvedPrice,
+    sourceProfileId: r.sourceProfileId ?? null,
+    matchScore: r.matchScore ?? null,
+  }));
+
+  const saved = await prisma.resolvedPriceLog.createMany({ data });
+  res.status(201).json({ saved: saved.count });
+});
+
 router.get('/history', async (req: Request, res: Response) => {
-  const { customerId, productId } = req.query as Record<string, string | undefined>;
+  const { customerId } = req.query as Record<string, string | undefined>;
   if (!customerId) {
     res.status(400).json({ error: 'customerId is required' });
     return;
   }
-  if (!productId) {
-    res.status(400).json({ error: 'productId is required' });
-    return;
-  }
+
   const logs = await prisma.resolvedPriceLog.findMany({
-    where: { customerId, productId },
+    where: { customerId },
     orderBy: { createdAt: 'desc' },
   });
-  console.log('LOGS: ', logs)
-  res.json(logs);
+
+  if (logs.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const profileIds = [...new Set(logs.map((l) => l.sourceProfileId).filter((id): id is string => id != null))];
+  const productIds = [...new Set(logs.map((l) => l.productId))];
+
+  const [profiles, products] = await Promise.all([
+    prisma.pricingProfile.findMany({
+      where: { id: { in: profileIds } },
+      select: { id: true, name: true, effectiveTo: true },
+    }),
+    prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, title: true },
+    }),
+  ]);
+
+  const profileMap = new Map(profiles.map((p) => [p.id, p]));
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  const now = new Date();
+
+  const enriched = logs.map((log) => {
+    const profile = log.sourceProfileId ? profileMap.get(log.sourceProfileId) : null;
+    const product = productMap.get(log.productId);
+    return {
+      id: log.id,
+      customerId: log.customerId,
+      productId: log.productId,
+      productName: product?.title ?? null,
+      resolvedPrice: log.resolvedPrice?.toNumber() ?? null,
+      sourceProfileId: log.sourceProfileId,
+      sourceProfileName: profile?.name ?? null,
+      matchScore: log.matchScore,
+      profileExpired: profile != null && profile.effectiveTo != null && profile.effectiveTo < now,
+      createdAt: log.createdAt.toISOString(),
+    };
+  });
+
+  res.json(enriched);
 });
 
 export default router;
