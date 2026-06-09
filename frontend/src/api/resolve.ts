@@ -69,7 +69,10 @@ export async function resolvePriceBatch(
 
 export async function saveResolvedPrices(
   customerId: string,
-  results: Pick<BatchResolveItem, 'productId' | 'resolvedPrice' | 'sourceProfileId' | 'matchScore'>[],
+  results: Pick<
+    BatchResolveItem,
+    'productId' | 'resolvedPrice' | 'sourceProfileId' | 'matchScore'
+  >[],
 ): Promise<{ saved: number }> {
   const res = await fetch(`${BASE}/api/resolve/save`, {
     method: 'POST',
@@ -84,10 +87,18 @@ export async function saveResolvedPrices(
   return res.json() as Promise<{ saved: number }>;
 }
 
-export async function getResolvedPriceHistory(customerId: string): Promise<import('@/types').ResolvedPriceLog[]> {
-  const res = await fetch(`${BASE}/api/resolve/history?customerId=${encodeURIComponent(customerId)}`, {
-    credentials: 'include',
-  });
+export async function getResolvedPriceHistory(
+  customerId: string | null,
+): Promise<import('@/types').ResolvedPriceLog[]> {
+  if (customerId === null) {
+    throw new Error('Failed to fetch history');
+  }
+  const res = await fetch(
+    `${BASE}/api/resolve/history?customerId=${encodeURIComponent(customerId)}`,
+    {
+      credentials: 'include',
+    },
+  );
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(body.error ?? 'Failed to fetch history');

@@ -11,7 +11,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getCustomers } from '@/api/customers';
 import { getResolvedPriceHistory } from '@/api/resolve';
-import type { ResolvedPriceLog } from '@/types';
 import {
   Table,
   TableBody,
@@ -24,7 +23,7 @@ import {
 const STALE_MS = 3 * 60 * 1000;
 
 export function ResolvedPricesPage() {
-  const [customerId, setCustomerId] = useState('');
+  const [customerId, setCustomerId] = useState<string | null>(null);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -52,7 +51,7 @@ export function ResolvedPricesPage() {
         <div className="px-4 py-4">
           <div className="space-y-1.5 max-w-xs">
             <Label className="text-xs text-muted-foreground">Customer</Label>
-            <Select value={customerId || undefined} onValueChange={setCustomerId}>
+            <Select value={customerId} onValueChange={(value)=> setCustomerId(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select customer…" />
               </SelectTrigger>
