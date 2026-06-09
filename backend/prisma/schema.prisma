@@ -8,13 +8,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  SUPER_ADMIN
+  STAFF
+}
+
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  role               Role                @default(STAFF)
+  createdAt          DateTime            @default(now())
+  inviteTokens       InviteToken[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
+}
+
+model InviteToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("invite_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
 }
 
 model Customer {

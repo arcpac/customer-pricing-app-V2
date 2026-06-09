@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import type { Role } from '@/types';
 
 const BASE = import.meta.env.VITE_API_URL ?? '';
 
 interface Props {
-  onLogin: () => void;
+  onLogin: (role: Role) => void;
 }
 
 export function LoginPage({ onLogin }: Props) {
@@ -29,7 +30,8 @@ export function LoginPage({ onLogin }: Props) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? 'Login failed');
       }
-      onLogin();
+      const data = (await res.json()) as { role: Role };
+      onLogin(data.role);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Login failed');
     } finally {

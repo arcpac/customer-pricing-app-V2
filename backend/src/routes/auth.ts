@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '../generated/prisma/client.js';
+import { getUserByEmail } from '../utils/user.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -21,21 +22,22 @@ router.post('/login', async (req, res) => {
     return;
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await getUserByEmail(email);
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     res.status(401).json({ error: 'invalid credentials' });
     return;
   }
+  console.log('Jwt: ', process.env.JWT_SECRET);
 
   const token = jwt.sign(
-    { userId: user.id, email: user.email },
+    { userId: user.id, email: user.email, role: user.role },
     process.env.JWT_SECRET!,
     {
       expiresIn: '10m',
     },
   );
   res.cookie('token', token, COOKIE_OPTS);
-  res.json({ email: user.email });
+  res.json({ email: user.email, role: user.role });
 });
 
 router.post('/logout', (_req, res) => {
@@ -53,8 +55,13 @@ router.get('/me', (req, res) => {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
       userId: string;
       email: string;
+      role: string;
     };
-    res.json({ userId: payload.userId, email: payload.email });
+    res.json({
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    });
   } catch {
     res.status(401).json({ error: 'unauthenticated' });
   }

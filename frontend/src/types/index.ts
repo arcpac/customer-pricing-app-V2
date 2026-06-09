@@ -1,3 +1,12 @@
+export type Role = 'SUPER_ADMIN' | 'STAFF';
+
+export interface User {
+  id: string;
+  email: string;
+  role: Role;
+  createdAt: string;
+}
+
 export interface Product {
   id: string;
   title: string;
