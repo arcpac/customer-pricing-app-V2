@@ -124,6 +124,10 @@ export function PricingPage() {
     refetchAll,
   ]);
 
+  // Effective dates
+  const [effectiveFrom, setEffectiveFrom] = useState('');
+  const [effectiveTo, setEffectiveTo] = useState('');
+
   // Adjustment
   const [adjustmentType, setAdjustmentType] =
     useState<Adjustment['type']>('fixed');
@@ -258,6 +262,8 @@ export function PricingPage() {
         adjustmentDirection,
         adjustmentValue,
         ...productPayload,
+        effectiveFrom: effectiveFrom || null,
+        effectiveTo: effectiveTo || null,
       });
 
       toast.success('Pricing profile saved!');
@@ -268,6 +274,8 @@ export function PricingPage() {
       setAdjustmentValueStr('');
       setFilterSubCategory('');
       setFilterSegment('');
+      setEffectiveFrom('');
+      setEffectiveTo('');
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Failed to save pricing profile',
@@ -413,6 +421,29 @@ export function PricingPage() {
                     </Select>
                   </>
                 )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  Effective From <span className="italic">(optional)</span>
+                </Label>
+                <Input
+                  type="date"
+                  value={effectiveFrom}
+                  onChange={(e) => setEffectiveFrom(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  Effective To <span className="italic">(optional)</span>
+                </Label>
+                <Input
+                  type="date"
+                  value={effectiveTo}
+                  onChange={(e) => setEffectiveTo(e.target.value)}
+                />
               </div>
             </div>
           </div>

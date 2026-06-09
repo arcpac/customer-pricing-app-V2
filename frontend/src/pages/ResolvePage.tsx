@@ -12,9 +12,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getCustomers } from '@/api/customers';
 import { getProducts } from '@/api/products';
-import { resolvePriceBatch } from '@/api/resolve';
+import { resolvePriceBatch, saveResolvedPrices } from '@/api/resolve';
 import type { BatchResolveItem } from '@/api/resolve';
 import type { Customer, Product } from '@/types';
+import { toast } from 'sonner';
 
 function adjustmentLabel(item: BatchResolveItem): string {
   if (item.resolvedPrice === null || item.adjustmentType === undefined)
@@ -36,6 +37,7 @@ export function ResolvePage() {
   const [results, setResults] = useState<BatchResolveItem[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     getCustomers().then(setCustomers).catch(console.error);
@@ -62,6 +64,7 @@ export function ResolvePage() {
     setLoading(true);
     setError(null);
     setResults(null);
+    setSaved(false);
     try {
       const res = await resolvePriceBatch(customerId, [...selectedIds]);
       setResults(res);
@@ -69,6 +72,18 @@ export function ResolvePage() {
       setError(err instanceof Error ? err.message : 'Failed to resolve prices');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!results) return;
+    const toSave = results.filter((r) => r.resolvedPrice !== null);
+    try {
+      await saveResolvedPrices(customerId, toSave);
+      setSaved(true);
+      toast.success('Prices saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save prices');
     }
   };
 
@@ -161,8 +176,11 @@ export function ResolvePage() {
 
       {results && (
         <div className="rounded-lg border bg-card overflow-hidden">
-          <div className="px-4 py-3 border-b">
+          <div className="px-4 py-3 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold">Results</h2>
+            <Button size="sm" onClick={handleSave} disabled={saved}>
+              {saved ? 'Saved' : 'Save'}
+            </Button>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-muted/50">

@@ -66,3 +66,42 @@ export async function resolvePriceBatch(
   }
   return res.json() as Promise<BatchResolveItem[]>;
 }
+
+export async function saveResolvedPrices(
+  customerId: string,
+  results: Pick<
+    BatchResolveItem,
+    'productId' | 'resolvedPrice' | 'sourceProfileId' | 'matchScore'
+  >[],
+): Promise<{ saved: number }> {
+  const res = await fetch(`${BASE}/api/resolve/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ customerId, results }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'Failed to save prices');
+  }
+  return res.json() as Promise<{ saved: number }>;
+}
+
+export async function getResolvedPriceHistory(
+  customerId: string | null,
+): Promise<import('@/types').ResolvedPriceLog[]> {
+  if (customerId === null) {
+    throw new Error('Failed to fetch history');
+  }
+  const res = await fetch(
+    `${BASE}/api/resolve/history?customerId=${encodeURIComponent(customerId)}`,
+    {
+      credentials: 'include',
+    },
+  );
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'Failed to fetch history');
+  }
+  return res.json() as Promise<import('@/types').ResolvedPriceLog[]>;
+}

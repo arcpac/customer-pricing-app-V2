@@ -129,6 +129,8 @@ router.post('/', async (req: Request, res: Response) => {
     productScope = 'explicit',
     productFilter,
     productIds,
+    effectiveFrom,
+    effectiveTo,
   } = req.body as {
     name: string;
     customerScope?: 'individual' | 'group';
@@ -140,6 +142,8 @@ router.post('/', async (req: Request, res: Response) => {
     productScope?: 'explicit' | 'product' | 'subCategory' | 'segment' | 'all';
     productFilter?: ProductFilter;
     productIds?: string[];
+    effectiveFrom?: string;
+    effectiveTo?: string;
   };
 
   if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -340,8 +344,27 @@ router.post('/', async (req: Request, res: Response) => {
       ? { productFilter: productFilter as object }
       : {};
 
+  const dateData = (() => {
+    const from = effectiveFrom ? new Date(effectiveFrom) : null;
+    const to = effectiveTo ? new Date(effectiveTo) : null;
+    if (from && isNaN(from.getTime())) {
+      res.status(400).json({ error: 'effectiveFrom is not a valid date' });
+      return null;
+    }
+    if (to && isNaN(to.getTime())) {
+      res.status(400).json({ error: 'effectiveTo is not a valid date' });
+      return null;
+    }
+    if (from && to && from >= to) {
+      res.status(400).json({ error: 'effectiveFrom must be before effectiveTo' });
+      return null;
+    }
+    return { effectiveFrom: from, effectiveTo: to };
+  })();
+  if (dateData === null) return;
+
   const created = await prisma.pricingProfile.create({
-    data: { ...baseData, ...customerData, ...filterData },
+    data: { ...baseData, ...customerData, ...filterData, ...dateData },
     include: PROFILE_INCLUDE,
   });
 
@@ -403,11 +426,34 @@ router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
     return;
   }
 
-  const { name } = req.body as { name: unknown };
+  const { name, effectiveFrom, effectiveTo } = req.body as {
+    name: unknown;
+    effectiveFrom?: string | null;
+    effectiveTo?: string | null;
+  };
   if (!name || typeof name !== 'string' || name.trim() === '') {
     res.status(400).json({ error: 'name is required' });
     return;
   }
+
+  const from = effectiveFrom != null ? (effectiveFrom === '' ? null : new Date(effectiveFrom)) : undefined;
+  const to = effectiveTo != null ? (effectiveTo === '' ? null : new Date(effectiveTo)) : undefined;
+  if (from != null && isNaN(from.getTime())) {
+    res.status(400).json({ error: 'effectiveFrom is not a valid date' });
+    return;
+  }
+  if (to != null && isNaN(to.getTime())) {
+    res.status(400).json({ error: 'effectiveTo is not a valid date' });
+    return;
+  }
+  if (from != null && to != null && from >= to) {
+    res.status(400).json({ error: 'effectiveFrom must be before effectiveTo' });
+    return;
+  }
+  const dateUpdate = {
+    ...(from !== undefined ? { effectiveFrom: from } : {}),
+    ...(to !== undefined ? { effectiveTo: to } : {}),
+  };
 
   const updatedItems = existing.items.map((item) => ({
     productId: item.productId,
@@ -424,6 +470,7 @@ router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
     where: { id: req.params.id },
     data: {
       name: name.trim(),
+      ...dateUpdate,
       items: {
         deleteMany: {},
         create: updatedItems,
