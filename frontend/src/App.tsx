@@ -8,23 +8,68 @@ import { PricingProfilesPage } from '@/pages/PricingProfilesPage';
 import { CustomerGroupMembershipsPage } from '@/pages/CustomerGroupMembershipsPage';
 import { ResolvedPricesPage } from '@/pages/ResolvedPricesPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { SetPasswordPage } from '@/pages/SetPasswordPage';
+import { UsersPage } from '@/pages/admin/UsersPage';
+import { ProductsManagePage } from '@/pages/admin/ProductsManagePage';
+import { CustomersManagePage } from '@/pages/admin/CustomersManagePage';
+import { CustomerGroupsManagePage } from '@/pages/admin/CustomerGroupsManagePage';
 import { checkAuth, logout } from '@/api/auth';
 import { Button } from '@/components/ui/button';
+import type { Role } from '@/types';
+
+function getTokenParams(): { token: string; type: 'invite' | 'reset' } | null {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const type = params.get('type');
+  if (token && (type === 'invite' || type === 'reset')) {
+    return { token, type };
+  }
+  return null;
+}
 
 function App() {
   const [page, setPage] = useState<Page>('pricing');
+  const [role, setRole] = useState<Role | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
-  debugger;
+  const tokenParams = getTokenParams();
+
   useEffect(() => {
-    checkAuth().then(setAuthed);
+    checkAuth().then((result) => {
+      if (result) {
+        setRole(result.role);
+        setAuthed(true);
+      } else {
+        setAuthed(false);
+      }
+    });
   }, []);
+
+  if (tokenParams) {
+    return (
+      <>
+        <SetPasswordPage
+          token={tokenParams.token}
+          type={tokenParams.type}
+          onDone={() => {
+            window.history.replaceState({}, '', '/');
+          }}
+        />
+        <Toaster />
+      </>
+    );
+  }
 
   if (authed === null) return null;
 
   if (!authed) {
     return (
       <>
-        <LoginPage onLogin={() => setAuthed(true)} />
+        <LoginPage
+          onLogin={(newRole: Role) => {
+            setRole(newRole);
+            setAuthed(true);
+          }}
+        />
         <Toaster />
       </>
     );
@@ -33,14 +78,15 @@ function App() {
   async function handleLogout() {
     await logout();
     setAuthed(false);
+    setRole(null);
   }
 
   return (
     <div className="flex h-screen bg-slate-50 text-foreground">
-      <Sidebar activePage={page} onNavigate={setPage} />
+      <Sidebar activePage={page} onNavigate={setPage} role={role!} />
       <main className="flex-1 ml-56 overflow-auto p-6">
         <div className="mb-4 flex justify-end">
-          <Button variant="outline" size="sm" onClick={handleLogout}>
+          <Button variant="outline" size="sm" onClick={() => void handleLogout()}>
             Logout
           </Button>
         </div>
@@ -49,6 +95,10 @@ function App() {
         {page === 'profiles' && <PricingProfilesPage />}
         {page === 'memberships' && <CustomerGroupMembershipsPage />}
         {page === 'resolved-prices' && <ResolvedPricesPage />}
+        {page === 'admin-users' && <UsersPage />}
+        {page === 'admin-products' && <ProductsManagePage />}
+        {page === 'admin-customers' && <CustomersManagePage />}
+        {page === 'admin-groups' && <CustomerGroupsManagePage />}
       </main>
       <Toaster />
     </div>

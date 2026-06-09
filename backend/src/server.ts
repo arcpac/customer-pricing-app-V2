@@ -1,7 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import productsRouter from './routes/products.js';
 import customersRouter from './routes/customers.js';
@@ -10,10 +10,11 @@ import customerGroupMembershipsRouter from './routes/customerGroupMemberships.js
 import pricingProfilesRouter from './routes/pricingProfiles.js';
 import resolveRouter from './routes/resolve.js';
 import authRouter from './routes/auth.js';
+import usersRouter from './routes/users.js';
+import inviteRouter from './routes/invite.js';
+import resetPasswordRouter from './routes/resetPassword.js';
 import { requireAuth } from './middleware/auth.js';
 import { swaggerSpec } from './swagger.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -40,6 +41,9 @@ app.use(
 );
 app.use('/api/pricing-profiles', requireAuth, pricingProfilesRouter);
 app.use('/api/resolve', requireAuth, resolveRouter);
+app.use('/api/users', requireAuth, usersRouter);
+app.use('/api/invite', inviteRouter);
+app.use('/api/reset-password', resetPasswordRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

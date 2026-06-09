@@ -1,7 +1,7 @@
 import type { Product, ProductFilters } from '@/types';
 import { sleep } from '@/utils/sleep';
 
-const BASE = 'http://localhost:4000';
+const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 export async function getProducts(
   filters?: ProductFilters,
@@ -20,4 +20,34 @@ export async function getProducts(
   });
   if (!res.ok) throw new Error('Failed to fetch products');
   return res.json() as Promise<Product[]>;
+}
+
+export async function createProduct(data: Omit<Product, 'id'>): Promise<Product> {
+  const res = await fetch(`${BASE}/api/products`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create product');
+  return res.json() as Promise<Product>;
+}
+
+export async function updateProduct(id: string, data: Partial<Omit<Product, 'id'>>): Promise<Product> {
+  const res = await fetch(`${BASE}/api/products/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to update product');
+  return res.json() as Promise<Product>;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/products/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to delete product');
 }

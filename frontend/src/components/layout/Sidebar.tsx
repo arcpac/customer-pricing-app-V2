@@ -1,15 +1,26 @@
-import { ClipboardList, DollarSign, List, Search, Tag, Users } from 'lucide-react';
+import { ClipboardList, DollarSign, List, Search, Settings, Tag, UserCog, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Role } from '@/types';
 
-export type Page = 'pricing' | 'resolve' | 'profiles' | 'memberships' | 'resolved-prices';
+export type Page =
+  | 'pricing'
+  | 'resolve'
+  | 'profiles'
+  | 'memberships'
+  | 'resolved-prices'
+  | 'admin-users'
+  | 'admin-products'
+  | 'admin-customers'
+  | 'admin-groups';
 
 interface SidebarProps {
   activePage: Page;
   onNavigate: (page: Page) => void;
+  role: Role;
   className?: string;
 }
 
-export function Sidebar({ activePage, onNavigate, className }: SidebarProps) {
+export function Sidebar({ activePage, onNavigate, role, className }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -64,6 +75,42 @@ export function Sidebar({ activePage, onNavigate, className }: SidebarProps) {
         >
           Resolved Prices
         </NavBtn>
+
+        {role === 'SUPER_ADMIN' && (
+          <>
+            <div className="pt-3 pb-1 px-3">
+              <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider">Admin</p>
+            </div>
+            <NavBtn
+              active={activePage === 'admin-users'}
+              onClick={() => onNavigate('admin-users')}
+              icon={<UserCog size={15} />}
+            >
+              Users
+            </NavBtn>
+            <NavBtn
+              active={activePage === 'admin-products'}
+              onClick={() => onNavigate('admin-products')}
+              icon={<Settings size={15} />}
+            >
+              Products
+            </NavBtn>
+            <NavBtn
+              active={activePage === 'admin-customers'}
+              onClick={() => onNavigate('admin-customers')}
+              icon={<Users size={15} />}
+            >
+              Customers
+            </NavBtn>
+            <NavBtn
+              active={activePage === 'admin-groups'}
+              onClick={() => onNavigate('admin-groups')}
+              icon={<List size={15} />}
+            >
+              Groups
+            </NavBtn>
+          </>
+        )}
       </nav>
     </aside>
   );
