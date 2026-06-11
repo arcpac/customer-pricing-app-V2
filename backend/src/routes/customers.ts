@@ -5,22 +5,6 @@ import { requireRole } from '../middleware/auth.js';
 
 const router = Router();
 
-/**
- * @openapi
- * /api/customers:
- *   get:
- *     summary: List all customers
- *     tags: [Customers]
- *     responses:
- *       200:
- *         description: Array of customers
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Customer'
- */
 router.get('/', async (_req: Request, res: Response) => {
   const customers = await prisma.customer.findMany({
     orderBy: { name: 'asc' },

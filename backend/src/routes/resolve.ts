@@ -16,33 +16,6 @@ const PROFILE_INCLUDE = {
   customerGroup: true,
 } as const;
 
-/**
- * @openapi
- * /api/resolve:
- *   get:
- *     summary: Resolve price for a customer/product pair
- *     tags: [Resolve]
- *     parameters:
- *       - in: query
- *         name: customerId
- *         required: true
- *         schema: { type: string }
- *       - in: query
- *         name: productId
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Resolved price with source profile
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResolveResult'
- *       400:
- *         description: Missing parameters
- *       404:
- *         description: Customer or product not found
- */
 router.post('/', async (req: Request, res: Response) => {
   const { customerId, productId } = req.body as Record<string, string>;
 
@@ -81,30 +54,6 @@ router.post('/', async (req: Request, res: Response) => {
   res.json(result);
 });
 
-/**
- * @openapi
- * /api/resolve/batch:
- *   get:
- *     summary: Resolve prices for multiple products for a customer
- *     tags: [Resolve]
- *     parameters:
- *       - in: query
- *         name: customerId
- *         required: true
- *         schema: { type: string }
- *       - in: query
- *         name: productIds
- *         required: true
- *         schema: { type: string }
- *         description: Comma-separated product IDs
- *     responses:
- *       200:
- *         description: Array of resolved prices
- *       400:
- *         description: Missing parameters
- *       404:
- *         description: Customer not found
- */
 router.post('/batch', async (req: Request, res: Response) => {
   const { customerId, productIds: rawProductIds } = req.body as {
     customerId: string;

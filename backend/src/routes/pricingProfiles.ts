@@ -12,61 +12,6 @@ const PROFILE_INCLUDE = {
   customerGroup: true,
 } as const;
 
-/**
- * @openapi
- * /api/pricing-profiles:
- *   get:
- *     summary: List all pricing profiles
- *     tags: [Pricing Profiles]
- *     responses:
- *       200:
- *         description: Array of pricing profiles
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/PricingProfile'
- *   post:
- *     summary: Create a pricing profile
- *     tags: [Pricing Profiles]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [name, adjustmentType, adjustmentDirection, adjustmentValue]
- *             properties:
- *               name: { type: string }
- *               customerScope: { type: string, enum: [individual, group], default: individual }
- *               customerId: { type: string }
- *               customerGroupId: { type: string }
- *               adjustmentType: { type: string, enum: [fixed, percentage, custom_price] }
- *               adjustmentDirection: { type: string, enum: [increase, decrease] }
- *               adjustmentValue: { type: number, minimum: 0 }
- *               productScope: { type: string, enum: [explicit, product, subCategory, segment, all], default: explicit }
- *               productFilter:
- *                 type: object
- *                 properties:
- *                   productId: { type: string }
- *                   subCategory: { type: string }
- *                   segment: { type: string }
- *               productIds: { type: array, items: { type: string } }
- *     responses:
- *       201:
- *         description: Created profile
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PricingProfile'
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 router.get('/', async (_req: Request, res: Response) => {
   const profiles = await prisma.pricingProfile.findMany({
     include: PROFILE_INCLUDE,
@@ -75,23 +20,6 @@ router.get('/', async (_req: Request, res: Response) => {
   res.json(profiles.map(mapProfile));
 });
 
-/**
- * @openapi
- * /api/pricing-profiles/{id}:
- *   get:
- *     summary: Get pricing profile by ID
- *     tags: [Pricing Profiles]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Pricing profile
- *       404:
- *         description: Not found
- */
 router.get('/:id/audit', async (req: Request<{ id: string }>, res: Response) => {
   const profile = await prisma.pricingProfile.findUnique({ where: { id: req.params.id } });
   if (!profile) {
@@ -375,47 +303,6 @@ router.post('/', async (req: Request, res: Response) => {
   res.status(201).json(mappedCreated);
 });
 
-/**
- * @openapi
- * /api/pricing-profiles/{id}:
- *   put:
- *     summary: Update pricing profile name (recomputes items)
- *     tags: [Pricing Profiles]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [name]
- *             properties:
- *               name: { type: string }
- *     responses:
- *       200:
- *         description: Updated profile
- *       400:
- *         description: Validation error
- *       404:
- *         description: Not found
- *   delete:
- *     summary: Delete a pricing profile
- *     tags: [Pricing Profiles]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       204:
- *         description: Deleted
- *       404:
- *         description: Not found
- */
 router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const existing = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
