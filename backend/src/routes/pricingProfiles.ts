@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { mapProfile } from '../lib/mappers.js';
+import { requireRole } from '../middleware/auth.js';
 import type { ProductFilter } from '../data/pricingProfiles.js';
 import { computeAdjustedPrice } from '../utils/pricing.js';
 
@@ -45,7 +46,7 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
   res.json(mapProfile(profile));
 });
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request, res: Response) => {
   const {
     name,
     customerScope = 'individual',
@@ -372,7 +373,7 @@ router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
   res.json(mapProfile(updated));
 });
 
-router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.delete('/:id', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
   const existing = await prisma.pricingProfile.findUnique({
     where: { id: req.params.id },
   });
