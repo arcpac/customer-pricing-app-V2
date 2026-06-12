@@ -2,7 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import swaggerUi from 'swagger-ui-express';
 import productsRouter from './routes/products.js';
 import customersRouter from './routes/customers.js';
 import customerGroupsRouter from './routes/customerGroups.js';
@@ -14,16 +13,12 @@ import usersRouter from './routes/users.js';
 import inviteRouter from './routes/invite.js';
 import resetPasswordRouter from './routes/resetPassword.js';
 import { requireAuth } from './middleware/auth.js';
-import { swaggerSpec } from './swagger.js';
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
-
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });

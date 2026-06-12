@@ -26,6 +26,7 @@ export function LoginPage({ onLogin }: Props) {
         credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
+
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? 'Login failed');
