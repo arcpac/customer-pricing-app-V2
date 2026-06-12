@@ -78,7 +78,7 @@ router.get('/', async (req: Request, res: Response) => {
   res.json(products.map(mapProduct));
 });
 
-router.post('/', requireRole('SUPER_ADMIN'), async (req: Request, res: Response) => {
+router.post('/', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request, res: Response) => {
   const { title, sku, subCategory, segment, brand, basePrice } = req.body as {
     title: string;
     sku: string;
@@ -93,7 +93,7 @@ router.post('/', requireRole('SUPER_ADMIN'), async (req: Request, res: Response)
   res.status(201).json(mapProduct(product));
 });
 
-router.put('/:id', requireRole('SUPER_ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
+router.put('/:id', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
   const { title, sku, subCategory, segment, brand, basePrice } = req.body as {
     title?: string;
     sku?: string;
@@ -113,7 +113,7 @@ router.put('/:id', requireRole('SUPER_ADMIN'), async (req: Request<{ id: string 
   res.json(mapProduct(product));
 });
 
-router.delete('/:id', requireRole('SUPER_ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
+router.delete('/:id', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
   await prisma.product.delete({ where: { id: req.params.id } });
   res.status(204).send();
 });

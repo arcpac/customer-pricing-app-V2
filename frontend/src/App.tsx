@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { Sidebar } from '@/components/layout/Sidebar';
 import type { Page } from '@/components/layout/Sidebar';
@@ -17,6 +18,22 @@ import { checkAuth, logout } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import type { Role } from '@/types';
 
+const PAGE_TO_PATH: Record<Page, string> = {
+  pricing: '/',
+  resolve: '/resolve',
+  profiles: '/profiles',
+  memberships: '/memberships',
+  'resolved-prices': '/resolved-prices',
+  'admin-users': '/admin/users',
+  'admin-products': '/admin/products',
+  'admin-customers': '/admin/customers',
+  'admin-groups': '/admin/groups',
+};
+
+const PATH_TO_PAGE: Record<string, Page> = Object.fromEntries(
+  Object.entries(PAGE_TO_PATH).map(([page, path]) => [path, page as Page]),
+);
+
 function getTokenParams(): { token: string; type: 'invite' | 'reset' } | null {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
@@ -28,7 +45,9 @@ function getTokenParams(): { token: string; type: 'invite' | 'reset' } | null {
 }
 
 function App() {
-  const [page, setPage] = useState<Page>('pricing');
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const page: Page = PATH_TO_PAGE[pathname] ?? 'pricing';
   const [role, setRole] = useState<Role | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const tokenParams = getTokenParams();
@@ -83,7 +102,7 @@ function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 text-foreground">
-      <Sidebar activePage={page} onNavigate={setPage} role={role!} />
+      <Sidebar activePage={page} onNavigate={(p) => navigate(PAGE_TO_PATH[p])} role={role!} />
       <main className="flex-1 ml-56 overflow-auto p-6">
         <div className="mb-4 flex justify-end">
           <Button variant="outline" size="sm" onClick={() => void handleLogout()}>

@@ -28,19 +28,19 @@ router.get('/', async (_req: Request, res: Response) => {
   res.json(customers);
 });
 
-router.post('/', requireRole('SUPER_ADMIN'), async (req: Request, res: Response) => {
+router.post('/', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request, res: Response) => {
   const { name } = req.body as { name: string };
   const customer = await prisma.customer.create({ data: { name } });
   res.status(201).json(customer);
 });
 
-router.put('/:id', requireRole('SUPER_ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
+router.put('/:id', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
   const { name } = req.body as { name: string };
   const customer = await prisma.customer.update({ where: { id: req.params.id }, data: { name } });
   res.json(customer);
 });
 
-router.delete('/:id', requireRole('SUPER_ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
+router.delete('/:id', requireRole('SUPER_ADMIN', 'ADMIN'), async (req: Request<{ id: string }>, res: Response) => {
   await prisma.customer.delete({ where: { id: req.params.id } });
   res.status(204).send();
 });
