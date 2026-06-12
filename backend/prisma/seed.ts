@@ -24,6 +24,13 @@ async function main() {
       role: 'SUPER_ADMIN',
     },
   });
+  await prisma.user.create({
+    data: {
+      email: 'useradmin@email.com',
+      passwordHash: await bcrypt.hash('useradmin123', 10),
+      role: 'ADMIN',
+    },
+  });
 
   // Customers
   const [, , , , , bondCellars] = await Promise.all([

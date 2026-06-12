@@ -76,18 +76,20 @@ export function Sidebar({ activePage, onNavigate, role, className }: SidebarProp
           Resolved Prices
         </NavBtn>
 
-        {role === 'SUPER_ADMIN' && (
+        {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
           <>
             <div className="pt-3 pb-1 px-3">
               <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider">Admin</p>
             </div>
-            <NavBtn
-              active={activePage === 'admin-users'}
-              onClick={() => onNavigate('admin-users')}
-              icon={<UserCog size={15} />}
-            >
-              Users
-            </NavBtn>
+            {role === 'SUPER_ADMIN' && (
+              <NavBtn
+                active={activePage === 'admin-users'}
+                onClick={() => onNavigate('admin-users')}
+                icon={<UserCog size={15} />}
+              >
+                Users
+              </NavBtn>
+            )}
             <NavBtn
               active={activePage === 'admin-products'}
               onClick={() => onNavigate('admin-products')}
