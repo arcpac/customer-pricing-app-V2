@@ -91,15 +91,11 @@ export function ResolvePage() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <p className="text-xs text-muted-foreground">Pages / Resolve price</p>
+        <h1 className="text-2xl font-bold text-foreground mt-0.5">Resolve Price</h1>
+      </div>
       <div className="rounded-lg border bg-card">
-        <div className="px-4 py-3 border-b">
-          <h1 className="text-sm font-semibold">Resolve Price</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Select a customer and products to see automatic adjustments from
-            matching profiles.
-          </p>
-        </div>
-
         <div className="px-4 py-4 space-y-4">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Customer</Label>

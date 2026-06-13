@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test --prefix backend",
+    "dev": "npm run dev --prefix backend && npm run dev --prefix frontend",
     "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
