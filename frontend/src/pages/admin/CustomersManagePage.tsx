@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
 import type { Customer } from '@/types';
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '@/api/customers';
+
+const STALE_MS = 3 * 60 * 1000;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,23 +13,24 @@ import {
 } from '@/components/ui/table';
 
 export function CustomersManagePage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
-  useEffect(() => {
-    getCustomers().then(setCustomers).catch(() => toast.error('Failed to load customers')).finally(() => setLoading(false));
-  }, []);
+  const { data: customers = [], isLoading: loading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+    staleTime: STALE_MS,
+  });
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAdding(true);
     try {
-      const created = await createCustomer(newName.trim());
-      setCustomers((prev) => [...prev, created]);
+      await createCustomer(newName.trim());
+      await queryClient.invalidateQueries({ queryKey: ['customers'] });
       setNewName('');
       toast.success('Customer created');
     } catch {
@@ -38,8 +42,8 @@ export function CustomersManagePage() {
 
   async function handleSaveEdit(id: string) {
     try {
-      const updated = await updateCustomer(id, editName.trim());
-      setCustomers((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      await updateCustomer(id, editName.trim());
+      await queryClient.invalidateQueries({ queryKey: ['customers'] });
       setEditingId(null);
       toast.success('Customer updated');
     } catch {
@@ -50,7 +54,7 @@ export function CustomersManagePage() {
   async function handleDelete(id: string) {
     try {
       await deleteCustomer(id);
-      setCustomers((prev) => prev.filter((c) => c.id !== id));
+      await queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast.success('Customer deleted');
     } catch {
       toast.error('Failed to delete customer');

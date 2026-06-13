@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { getPricingProfiles } from '@/api/pricingProfiles';
 import { getCustomers } from '@/api/customers';
-import type { PricingProfile, Customer } from '@/types';
+import type { PricingProfile } from '@/types';
 import {
   Table,
   TableBody,
@@ -45,20 +46,29 @@ function formatCustomer(
   return `Individual: ${name}`;
 }
 
+const STALE_MS = 3 * 60 * 1000;
+
 export function PricingProfilesPage() {
-  const [profiles, setProfiles] = useState<PricingProfile[]>([]);
-  const [nameMap, setNameMap] = useState<Map<string, string>>(new Map());
-  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    Promise.all([getPricingProfiles(), getCustomers()])
-      .then(([ps, cs]: [PricingProfile[], Customer[]]) => {
-        setProfiles(ps);
-        setNameMap(new Map(cs.map((c) => [c.id, c.name])));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: profiles = [], isFetching: loadingProfiles } = useQuery({
+    queryKey: ['pricingProfiles'],
+    queryFn: getPricingProfiles,
+    staleTime: STALE_MS,
+  });
+
+  const { data: customers = [], isFetching: loadingCustomers } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+    staleTime: STALE_MS,
+  });
+
+  const loading = loadingProfiles || loadingCustomers;
+
+  const nameMap = useMemo(
+    () => new Map(customers.map((c) => [c.id, c.name])),
+    [customers],
+  );
 
   function toggleRow(id: string) {
     setExpanded((prev) => {
@@ -105,7 +115,7 @@ export function PricingProfilesPage() {
             {profiles.map((p) => {
               const isOpen = expanded.has(p.id);
               return (
-                <>
+                <React.Fragment key={p.id}>
                   <TableRow
                     key={p.id}
                     className="cursor-pointer hover:bg-muted/50"
@@ -187,7 +197,7 @@ export function PricingProfilesPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </React.Fragment>
               );
             })}
           </TableBody>

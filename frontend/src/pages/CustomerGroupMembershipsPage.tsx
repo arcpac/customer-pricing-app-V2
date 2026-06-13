@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { getCustomers } from '@/api/customers';
 import { getCustomerGroups } from '@/api/customerGroups';
 import { getCustomerGroupMemberships } from '@/api/customerGroupMemberships';
-import type { Customer, CustomerGroup, CustomerGroupMembership } from '@/types';
 import {
   Table,
   TableBody,
@@ -19,46 +19,48 @@ interface GroupedRow {
   members: { customerId: string; customerName: string }[];
 }
 
+const STALE_MS = 3 * 60 * 1000;
+
 export function CustomerGroupMembershipsPage() {
-  const [groupedRows, setGroupedRows] = useState<GroupedRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    Promise.all([
-      getCustomers(),
-      getCustomerGroups(),
-      getCustomerGroupMemberships(),
-    ])
-      .then(
-        ([customers, groups, memberships]: [
-          Customer[],
-          CustomerGroup[],
-          CustomerGroupMembership[],
-        ]) => {
-          const customerMap = new Map(customers.map((c) => [c.id, c.name]));
-          const grouped = new Map<string, GroupedRow>();
-          for (const g of groups) {
-            grouped.set(g.id, {
-              groupId: g.id,
-              groupName: g.name,
-              members: [],
-            });
-          }
-          for (const m of memberships) {
-            const row = grouped.get(m.customerGroupId);
-            if (row) {
-              row.members.push({
-                customerId: m.customerId,
-                customerName: customerMap.get(m.customerId) ?? m.customerId,
-              });
-            }
-          }
-          setGroupedRows([...grouped.values()]);
-        },
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: customers = [], isFetching: loadingCustomers } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+    staleTime: STALE_MS,
+  });
+
+  const { data: customerGroups = [], isFetching: loadingGroups } = useQuery({
+    queryKey: ['customerGroups'],
+    queryFn: getCustomerGroups,
+    staleTime: STALE_MS,
+  });
+
+  const { data: memberships = [], isFetching: loadingMemberships } = useQuery({
+    queryKey: ['customerGroupMemberships'],
+    queryFn: getCustomerGroupMemberships,
+    staleTime: STALE_MS,
+  });
+
+  const loading = loadingCustomers || loadingGroups || loadingMemberships;
+
+  const groupedRows = useMemo(() => {
+    const customerMap = new Map(customers.map((c) => [c.id, c.name]));
+    const grouped = new Map<string, GroupedRow>();
+    for (const g of customerGroups) {
+      grouped.set(g.id, { groupId: g.id, groupName: g.name, members: [] });
+    }
+    for (const m of memberships) {
+      const row = grouped.get(m.customerGroupId);
+      if (row) {
+        row.members.push({
+          customerId: m.customerId,
+          customerName: customerMap.get(m.customerId) ?? m.customerId,
+        });
+      }
+    }
+    return [...grouped.values()];
+  }, [customers, customerGroups, memberships]);
 
   function toggleRow(id: string) {
     setExpanded((prev) => {
@@ -95,7 +97,7 @@ export function CustomerGroupMembershipsPage() {
             {groupedRows.map((g) => {
               const isOpen = expanded.has(g.groupId);
               return (
-                <>
+                <React.Fragment key={g.groupId}>
                   <TableRow
                     key={g.groupId}
                     className="cursor-pointer hover:bg-muted/50"
@@ -146,7 +148,7 @@ export function CustomerGroupMembershipsPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </React.Fragment>
               );
             })}
           </TableBody>

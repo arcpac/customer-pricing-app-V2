@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,8 +15,9 @@ import { getCustomers } from '@/api/customers';
 import { getProducts } from '@/api/products';
 import { resolvePriceBatch, saveResolvedPrices } from '@/api/resolve';
 import type { BatchResolveItem } from '@/api/resolve';
-import type { Customer, Product } from '@/types';
 import { toast } from 'sonner';
+
+const STALE_MS = 3 * 60 * 1000;
 
 function adjustmentLabel(item: BatchResolveItem): string {
   if (item.resolvedPrice === null || item.adjustmentType === undefined)
@@ -29,8 +31,6 @@ function adjustmentLabel(item: BatchResolveItem): string {
 }
 
 export function ResolvePage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [customerId, setCustomerId] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
@@ -39,10 +39,17 @@ export function ResolvePage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    getCustomers().then(setCustomers).catch(console.error);
-    getProducts().then(setProducts).catch(console.error);
-  }, []);
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+    staleTime: STALE_MS,
+  });
+
+  const { data: products = [] } = useQuery({
+    queryKey: ['products', 'all'],
+    queryFn: () => getProducts(),
+    staleTime: STALE_MS,
+  });
 
   const filteredProducts = useMemo(() => {
     const q = search.toLowerCase();
@@ -92,8 +99,8 @@ export function ResolvePage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs text-muted-foreground">Pages / Resolve price</p>
-        <h1 className="text-2xl font-bold text-foreground mt-0.5">Resolve Price</h1>
+        <p className="text-xs text-muted-foreground">Pages / Create pricing</p>
+        <h1 className="text-2xl font-bold text-foreground mt-0.5">Create pricing</h1>
       </div>
       <div className="rounded-lg border bg-card">
         <div className="px-4 py-4 space-y-4">
