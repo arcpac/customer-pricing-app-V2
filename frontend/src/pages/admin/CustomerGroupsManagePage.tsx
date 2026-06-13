@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
-import type { CustomerGroup } from '@/types';
 import { getCustomerGroups, createCustomerGroup, updateCustomerGroup, deleteCustomerGroup } from '@/api/customerGroups';
 
 const STALE_MS = 3 * 60 * 1000;

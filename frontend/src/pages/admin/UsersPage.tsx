@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
-import type { User, Role } from '@/types';
+import type { Role } from '@/types';
 import { getUsers, inviteUser, updateUserRole, deleteUser } from '@/api/users';
 
 const STALE_MS = 3 * 60 * 1000;
