@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { transporter } from '../lib/mailer.js';
 import { getUserByEmail } from '../utils/user.js';
+import { checkRole } from '../utils/role.js';
 
 const router = Router();
 
@@ -17,12 +18,14 @@ router.post(
   requireAuth,
   requireRole('SUPER_ADMIN'),
   async (req: Request, res: Response) => {
-    const { email } = req.body as { email: string };
+    const { email, role } = req.body as { email: string; role: string };
 
+    const isValidRole = checkRole(role);
+    if (!isValidRole) return res.status(400).json({ error: 'invalid role' });
     let user = await getUserByEmail(email);
     if (!user) {
       user = await prisma.user.create({
-        data: { email, passwordHash: '', role: 'STAFF' },
+        data: { email, passwordHash: '', role },
       });
     }
 

@@ -1,5 +1,4 @@
 import type { User, Role } from '@/types';
-
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 export async function getUsers(): Promise<User[]> {
@@ -37,7 +36,10 @@ export async function deleteUser(id: string): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete user');
 }
 
-export async function acceptInvite(token: string, password: string): Promise<void> {
+export async function acceptInvite(
+  token: string,
+  password: string,
+): Promise<void> {
   const res = await fetch(`${BASE}/api/invite/accept`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,7 +56,10 @@ export async function requestPasswordReset(email: string): Promise<void> {
   });
 }
 
-export async function confirmPasswordReset(token: string, password: string): Promise<void> {
+export async function confirmPasswordReset(
+  token: string,
+  password: string,
+): Promise<void> {
   const res = await fetch(`${BASE}/api/reset-password/confirm`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
