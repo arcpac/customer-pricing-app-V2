@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
-import type { User, Role } from '@/types';
+import type { Role } from '@/types';
 import { getUsers, inviteUser, updateUserRole, deleteUser } from '@/api/users';
+
+const STALE_MS = 3 * 60 * 1000;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,14 +13,15 @@ import {
 } from '@/components/ui/table';
 
 export function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
 
-  useEffect(() => {
-    getUsers().then(setUsers).catch(() => toast.error('Failed to load users')).finally(() => setLoading(false));
-  }, []);
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    staleTime: STALE_MS,
+  });
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -26,8 +30,7 @@ export function UsersPage() {
       await inviteUser(inviteEmail);
       toast.success(`Invite sent to ${inviteEmail}`);
       setInviteEmail('');
-      const updated = await getUsers();
-      setUsers(updated);
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
     } catch {
       toast.error('Failed to send invite');
     } finally {
@@ -37,8 +40,8 @@ export function UsersPage() {
 
   async function handleRoleChange(id: string, role: Role) {
     try {
-      const updated = await updateUserRole(id, role);
-      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+      await updateUserRole(id, role);
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('Role updated');
     } catch {
       toast.error('Failed to update role');
@@ -48,7 +51,7 @@ export function UsersPage() {
   async function handleDelete(id: string) {
     try {
       await deleteUser(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('User deleted');
     } catch {
       toast.error('Failed to delete user');

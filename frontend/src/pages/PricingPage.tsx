@@ -457,8 +457,7 @@ export function PricingPage() {
 
       {/* Section 2: Setup Product Pricing */}
       <div className="rounded-2xl bg-white shadow-sm">
-        <button
-          type="button"
+        <div
           className="w-full flex items-center justify-between px-6 py-4 text-base font-bold transition-colors rounded-2xl"
           onClick={() => setProductPricingOpen((o) => !o)}
         >
@@ -486,7 +485,7 @@ export function PricingPage() {
               <ChevronRight size={15} />
             )}
           </div>
-        </button>
+        </div>
 
         {productPricingOpen && (
           <div className="px-6 pb-6 pt-4 border-t border-gray-100 space-y-4">

@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
-import type { CustomerGroup } from '@/types';
 import { getCustomerGroups, createCustomerGroup, updateCustomerGroup, deleteCustomerGroup } from '@/api/customerGroups';
+
+const STALE_MS = 3 * 60 * 1000;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,23 +12,24 @@ import {
 } from '@/components/ui/table';
 
 export function CustomerGroupsManagePage() {
-  const [groups, setGroups] = useState<CustomerGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
-  useEffect(() => {
-    getCustomerGroups().then(setGroups).catch(() => toast.error('Failed to load groups')).finally(() => setLoading(false));
-  }, []);
+  const { data: groups = [], isLoading: loading } = useQuery({
+    queryKey: ['customerGroups'],
+    queryFn: getCustomerGroups,
+    staleTime: STALE_MS,
+  });
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAdding(true);
     try {
-      const created = await createCustomerGroup(newName.trim());
-      setGroups((prev) => [...prev, created]);
+      await createCustomerGroup(newName.trim());
+      await queryClient.invalidateQueries({ queryKey: ['customerGroups'] });
       setNewName('');
       toast.success('Group created');
     } catch {
@@ -38,8 +41,8 @@ export function CustomerGroupsManagePage() {
 
   async function handleSaveEdit(id: string) {
     try {
-      const updated = await updateCustomerGroup(id, editName.trim());
-      setGroups((prev) => prev.map((g) => (g.id === id ? updated : g)));
+      await updateCustomerGroup(id, editName.trim());
+      await queryClient.invalidateQueries({ queryKey: ['customerGroups'] });
       setEditingId(null);
       toast.success('Group updated');
     } catch {
@@ -50,7 +53,7 @@ export function CustomerGroupsManagePage() {
   async function handleDelete(id: string) {
     try {
       await deleteCustomerGroup(id);
-      setGroups((prev) => prev.filter((g) => g.id !== id));
+      await queryClient.invalidateQueries({ queryKey: ['customerGroups'] });
       toast.success('Group deleted');
     } catch {
       toast.error('Failed to delete group');
