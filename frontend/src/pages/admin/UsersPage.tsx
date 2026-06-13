@@ -5,6 +5,12 @@ import { Trash2 } from 'lucide-react';
 import type { Role } from '@/types';
 import { getUsers, inviteUser, updateUserRole, deleteUser } from '@/api/users';
 
+const ROLE_LABELS: Record<Role, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  STAFF: 'Staff',
+}
+
 const STALE_MS = 3 * 60 * 1000;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,8 +91,7 @@ export function UsersPage() {
                     onChange={(e) => void handleRoleChange(u.id, e.target.value as Role)}
                     className="text-sm border rounded px-2 py-1 bg-background"
                   >
-                    <option value="STAFF">Staff</option>
-                    <option value="SUPER_ADMIN">Super Admin</option>
+                    {Object.entries(ROLE_LABELS).map(([value, label]) => (<option key={value} value={value}>{label}</option>))}
                   </select>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
