@@ -7,7 +7,8 @@ import { PricingPage } from '@/pages/PricingPage';
 import { ResolvePage } from '@/pages/ResolvePage';
 import { PricingProfilesPage } from '@/pages/PricingProfilesPage';
 import { CustomerGroupMembershipsPage } from '@/pages/CustomerGroupMembershipsPage';
-import { ResolvedPricesPage } from '@/pages/ResolvedPricesPage';
+import { ResolvedPricesListPage } from '@/pages/ResolvedPricesPage';
+import { ResolvedPriceDetailPage } from '@/pages/ResolvedPriceDetailPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { SetPasswordPage } from '@/pages/SetPasswordPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
@@ -47,7 +48,8 @@ function getTokenParams(): { token: string; type: 'invite' | 'reset' } | null {
 function App() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const page: Page = PATH_TO_PAGE[pathname] ?? 'pricing';
+  const isResolvedDetail = pathname.startsWith('/resolved-prices/');
+  const page: Page = PATH_TO_PAGE[pathname] ?? (isResolvedDetail ? 'resolved-prices' : 'pricing');
   const [role, setRole] = useState<Role | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const tokenParams = getTokenParams();
@@ -113,7 +115,11 @@ function App() {
         {page === 'resolve' && <ResolvePage />}
         {page === 'profiles' && <PricingProfilesPage />}
         {page === 'memberships' && <CustomerGroupMembershipsPage />}
-        {page === 'resolved-prices' && <ResolvedPricesPage />}
+        {page === 'resolved-prices' && (
+          isResolvedDetail
+            ? <ResolvedPriceDetailPage customerId={pathname.split('/')[2] ?? ''} />
+            : <ResolvedPricesListPage />
+        )}
         {page === 'admin-users' && <UsersPage />}
         {page === 'admin-products' && <ProductsManagePage />}
         {page === 'admin-customers' && <CustomersManagePage />}

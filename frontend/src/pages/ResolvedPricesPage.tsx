@@ -1,116 +1,43 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Building2 } from 'lucide-react';
 import { getCustomers } from '@/api/customers';
-import { getResolvedPriceHistory } from '@/api/resolve';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 const STALE_MS = 3 * 60 * 1000;
 
-export function ResolvedPricesPage() {
-  const [customerId, setCustomerId] = useState<string | null>(null);
+export function ResolvedPricesListPage() {
+  const navigate = useNavigate();
 
-  const { data: customers = [] } = useQuery({
+  const { data: customers = [], isFetching } = useQuery({
     queryKey: ['customers'],
     queryFn: getCustomers,
     staleTime: STALE_MS,
   });
 
-  const { data: logs = [], isFetching: loading } = useQuery({
-    queryKey: ['resolvedPriceHistory', customerId],
-    queryFn: () => getResolvedPriceHistory(customerId),
-    enabled: !!customerId,
-    staleTime: STALE_MS,
-  });
-
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border bg-card">
-        <div className="px-4 py-3 border-b">
-          <h1 className="text-sm font-semibold">Resolved Prices</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Saved resolution history per customer.
-          </p>
-        </div>
-
-        <div className="px-4 py-4">
-          <div className="space-y-1.5 max-w-xs">
-            <Label className="text-xs text-muted-foreground">Customer</Label>
-            <Select value={customerId} onValueChange={(value)=> setCustomerId(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select customer…" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+      <div>
+        <p className="text-xs text-muted-foreground">Pages / Resolved prices</p>
+        <h1 className="text-2xl font-bold text-foreground mt-0.5">Resolved Price</h1>
       </div>
 
-      {customerId && (
-        <div className="rounded-lg border bg-card">
-          {loading ? (
-            <p className="px-4 py-6 text-sm text-muted-foreground">Loading…</p>
-          ) : logs.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-muted-foreground">No saved prices for this customer.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product asdf</TableHead>
-                  <TableHead className="text-right">Resolved Price</TableHead>
-                  <TableHead>Profile Applied</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Saved At</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">
-                      {log.productName ?? log.productId}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {log.resolvedPrice != null ? `$${log.resolvedPrice.toFixed(2)}` : '—'}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {log.sourceProfileName ?? '—'}
-                    </TableCell>
-                    <TableCell>
-                      {log.profileExpired && (
-                        <Badge variant="destructive" className="text-xs">
-                          Expired profile
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(log.createdAt).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+      {isFetching ? (
+        <p className="text-sm text-muted-foreground px-1">Loading…</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          {customers.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => navigate(`/resolved-prices/${c.id}`)}
+              className="rounded-lg border bg-card p-5 flex flex-col items-center gap-3 text-center hover:bg-accent transition-colors"
+            >
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Building2 size={22} className="text-muted-foreground" />
+              </div>
+              <span className="text-sm font-medium">{c.name}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>

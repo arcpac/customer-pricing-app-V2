@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
 import type { Product } from '@/types';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '@/api/products';
+
+const STALE_MS = 3 * 60 * 1000;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,23 +16,24 @@ import {
 const EMPTY_FORM = { title: '', sku: '', subCategory: '', segment: '', brand: '', basePrice: '' };
 
 export function ProductsManagePage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_FORM);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState(EMPTY_FORM);
 
-  useEffect(() => {
-    getProducts().then(setProducts).catch(() => toast.error('Failed to load products')).finally(() => setLoading(false));
-  }, []);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['products', 'all'],
+    queryFn: () => getProducts(),
+    staleTime: STALE_MS,
+  });
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAdding(true);
     try {
-      const created = await createProduct({ ...form, basePrice: Number(form.basePrice) });
-      setProducts((prev) => [...prev, created]);
+      await createProduct({ ...form, basePrice: Number(form.basePrice) });
+      await queryClient.invalidateQueries({ queryKey: ['products', 'all'] });
       setForm(EMPTY_FORM);
       toast.success('Product created');
     } catch {
@@ -41,8 +45,8 @@ export function ProductsManagePage() {
 
   async function handleSaveEdit(id: string) {
     try {
-      const updated = await updateProduct(id, { ...editForm, basePrice: Number(editForm.basePrice) });
-      setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      await updateProduct(id, { ...editForm, basePrice: Number(editForm.basePrice) });
+      await queryClient.invalidateQueries({ queryKey: ['products', 'all'] });
       setEditingId(null);
       toast.success('Product updated');
     } catch {
@@ -53,7 +57,7 @@ export function ProductsManagePage() {
   async function handleDelete(id: string) {
     try {
       await deleteProduct(id);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      await queryClient.invalidateQueries({ queryKey: ['products', 'all'] });
       toast.success('Product deleted');
     } catch {
       toast.error('Failed to delete product');
