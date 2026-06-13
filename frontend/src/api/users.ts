@@ -1,5 +1,4 @@
 import type { User, Role } from '@/types';
-import { Role as ValidRoles } from '@/types/roles';
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 export async function getUsers(): Promise<User[]> {
