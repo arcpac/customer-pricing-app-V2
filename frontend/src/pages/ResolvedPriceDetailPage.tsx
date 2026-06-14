@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getCustomers } from '@/api/customers';
-import { getResolvedPriceHistory } from '@/api/resolve';
+import { getResolvedPriceHistory, fetchLatestSnapshot } from '@/api/resolve';
+import type { SnapshotData } from '@/api/resolve';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -18,6 +21,20 @@ const STALE_MS = 3 * 60 * 1000;
 
 export function ResolvedPriceDetailPage({ customerId }: { customerId: string }) {
   const navigate = useNavigate();
+  const [snapshotData, setSnapshotData] = useState<SnapshotData | null>(null);
+  const [loadingSnapshot, setLoadingSnapshot] = useState(false);
+
+  const handleFetchSnapshot = async () => {
+    setLoadingSnapshot(true);
+    try {
+      const data = await fetchLatestSnapshot(customerId);
+      setSnapshotData(data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to fetch snapshot');
+    } finally {
+      setLoadingSnapshot(false);
+    }
+  };
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -41,12 +58,15 @@ export function ResolvedPriceDetailPage({ customerId }: { customerId: string }) 
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('/resolved-prices')}>
             <ArrowLeft size={15} />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-sm font-semibold">
               {customer ? customer.name : 'Resolved Prices'}
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">Saved resolution history.</p>
           </div>
+          <Button size="sm" variant="outline" onClick={handleFetchSnapshot} disabled={loadingSnapshot}>
+            {loadingSnapshot ? 'Fetching…' : 'Fetch snapshot'}
+          </Button>
         </div>
       </div>
 
@@ -94,6 +114,20 @@ export function ResolvedPriceDetailPage({ customerId }: { customerId: string }) 
           </Table>
         )}
       </div>
+
+      {snapshotData && (
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b">
+            <h2 className="text-sm font-semibold">Latest snapshot</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {new Date(snapshotData.createdAt).toLocaleString()}
+            </p>
+          </div>
+          <pre className="px-4 py-4 text-xs overflow-auto">
+            {JSON.stringify(snapshotData, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

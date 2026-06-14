@@ -87,6 +87,55 @@ export async function saveResolvedPrices(
   return res.json() as Promise<{ saved: number }>;
 }
 
+export async function saveSnapshot(
+  customerId: string,
+  productIds: string[],
+  results: Pick<
+    BatchResolveItem,
+    'productId' | 'resolvedPrice' | 'sourceProfileId' | 'sourceProfileName' | 'matchScore'
+  >[],
+): Promise<{ id: string; s3Key: string; createdAt: string }> {
+  const res = await fetch(`${BASE}/api/resolve/snapshot`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ customerId, productIds, results }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'Failed to save snapshot');
+  }
+  return res.json() as Promise<{ id: string; s3Key: string; createdAt: string }>;
+}
+
+export interface SnapshotResult {
+  productId: string;
+  resolvedPrice: number | null;
+  sourceProfileId: string | null;
+  sourceProfileName: string | null;
+  matchScore: number | null;
+}
+
+export interface SnapshotData {
+  id: string;
+  customerId: string;
+  createdAt: string;
+  productIds: string[];
+  results: SnapshotResult[];
+}
+
+export async function fetchLatestSnapshot(customerId: string): Promise<SnapshotData> {
+  const res = await fetch(
+    `${BASE}/api/resolve/snapshot?customerId=${encodeURIComponent(customerId)}`,
+    { credentials: 'include' },
+  );
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'Failed to fetch snapshot');
+  }
+  return res.json() as Promise<SnapshotData>;
+}
+
 export async function getResolvedPriceHistory(
   customerId: string | null,
 ): Promise<import('@/types').ResolvedPriceLog[]> {

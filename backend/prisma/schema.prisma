@@ -138,6 +138,16 @@ model ProfileAuditLog {
   @@map("profile_audit_logs")
 }
 
+model ResolvedBatch {
+  id         String   @id @default(uuid())
+  customerId String
+  s3Key      String
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, createdAt])
+  @@map("resolved_batches")
+}
+
 model ResolvedPriceLog {
   id              String   @id @default(uuid())
   customerId      String
