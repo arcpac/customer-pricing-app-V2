@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getCustomers } from '@/api/customers';
 import { getProducts } from '@/api/products';
-import { resolvePriceBatch, saveResolvedPrices } from '@/api/resolve';
+import { resolvePriceBatch, saveResolvedPrices, saveSnapshot } from '@/api/resolve';
 import type { BatchResolveItem } from '@/api/resolve';
 import { toast } from 'sonner';
 
@@ -86,7 +86,10 @@ export function ResolvePage() {
     if (!results) return;
     const toSave = results.filter((r) => r.resolvedPrice !== null);
     try {
-      await saveResolvedPrices(customerId, toSave);
+      await Promise.all([
+        saveResolvedPrices(customerId, toSave),
+        saveSnapshot(customerId, [...selectedIds], results),
+      ]);
       setSaved(true);
       toast.success('Prices saved');
     } catch (err) {

@@ -8,6 +8,7 @@ import {
   mapMembership,
 } from '../lib/mappers.js';
 import { resolvePrice } from '../utils/resolver.js';
+import { putJson, getJson } from '../lib/s3.js';
 
 const router = Router();
 
@@ -208,6 +209,46 @@ router.get('/history', async (req: Request, res: Response) => {
   });
 
   res.json(enriched);
+});
+
+router.get('/snapshot', async (req: Request, res: Response) => {
+  const { customerId } = req.query as Record<string, string | undefined>;
+  if (!customerId) { res.status(400).json({ error: 'customerId required' }); return; }
+  const batch = await prisma.resolvedBatch.findFirst({
+    where: { customerId },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!batch) { res.status(404).json({ error: 'No snapshot found' }); return; }
+  const data = await getJson(batch.s3Key);
+  res.json(data);
+});
+
+router.post('/snapshot', async (req: Request, res: Response) => {
+  const { customerId, productIds, results } = req.body as {
+    customerId: string;
+    productIds: string[];
+    results: {
+      productId: string;
+      resolvedPrice: number | null;
+      sourceProfileId: string | null;
+      sourceProfileName: string | null;
+      matchScore: number | null;
+    }[];
+  };
+
+  if (!customerId) { res.status(400).json({ error: 'customerId required' }); return; }
+  if (!Array.isArray(productIds) || !productIds.length) { res.status(400).json({ error: 'productIds required' }); return; }
+  if (!Array.isArray(results) || !results.length) { res.status(400).json({ error: 'results required' }); return; }
+
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+  const key = `resolved-batch/${customerId}/${createdAt}-${id}.json`;
+
+  const batch = { id, customerId, createdAt, productIds, results };
+  await putJson(key, batch);
+  await prisma.resolvedBatch.create({ data: { id, customerId, s3Key: key } });
+
+  res.status(201).json({ id, s3Key: key, createdAt });
 });
 
 export default router;
