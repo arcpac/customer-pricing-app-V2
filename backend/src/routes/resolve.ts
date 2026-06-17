@@ -214,12 +214,15 @@ router.get('/history', async (req: Request, res: Response) => {
 router.get('/snapshot', async (req: Request, res: Response) => {
   const { customerId } = req.query as Record<string, string | undefined>;
   if (!customerId) { res.status(400).json({ error: 'customerId required' }); return; }
-  const batch = await prisma.resolvedBatch.findFirst({
+  const latestBatch = await prisma.resolvedBatch.findFirst({
     where: { customerId },
     orderBy: { createdAt: 'desc' },
   });
-  if (!batch) { res.status(404).json({ error: 'No snapshot found' }); return; }
-  const data = await getJson(batch.s3Key);
+  if (!latestBatch) {
+    res.status(404).json({ error: 'No snapshot found' });
+    return;
+  }
+  const data = await getJson(latestBatch.s3Key);
   res.json(data);
 });
 

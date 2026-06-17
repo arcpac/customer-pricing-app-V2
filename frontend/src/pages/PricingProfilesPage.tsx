@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { getPricingProfiles } from '@/api/pricingProfiles';
 import { getCustomers } from '@/api/customers';
 import type { PricingProfile } from '@/types';
@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 function formatRule(profile: PricingProfile): string {
   const { adjustmentType, adjustmentDirection, adjustmentValue } = profile;
@@ -90,6 +91,10 @@ export function PricingProfilesPage() {
     );
   }
 
+  async function handleDelete(id: string) {
+    console.log('delete profile')
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -109,6 +114,7 @@ export function PricingProfilesPage() {
               <TableHead>Effective From</TableHead>
               <TableHead>Effective To</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -149,6 +155,15 @@ export function PricingProfilesPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(p.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => void handleDelete(u.id)}
+                      >
+                        <Trash2 size={14} className="text-destructive" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                   {isOpen && (

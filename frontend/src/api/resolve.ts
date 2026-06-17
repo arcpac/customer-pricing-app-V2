@@ -92,7 +92,11 @@ export async function saveSnapshot(
   productIds: string[],
   results: Pick<
     BatchResolveItem,
-    'productId' | 'resolvedPrice' | 'sourceProfileId' | 'sourceProfileName' | 'matchScore'
+    | 'productId'
+    | 'resolvedPrice'
+    | 'sourceProfileId'
+    | 'sourceProfileName'
+    | 'matchScore'
   >[],
 ): Promise<{ id: string; s3Key: string; createdAt: string }> {
   const res = await fetch(`${BASE}/api/resolve/snapshot`, {
@@ -105,7 +109,11 @@ export async function saveSnapshot(
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(body.error ?? 'Failed to save snapshot');
   }
-  return res.json() as Promise<{ id: string; s3Key: string; createdAt: string }>;
+  return res.json() as Promise<{
+    id: string;
+    s3Key: string;
+    createdAt: string;
+  }>;
 }
 
 export interface SnapshotResult {
@@ -124,7 +132,9 @@ export interface SnapshotData {
   results: SnapshotResult[];
 }
 
-export async function fetchLatestSnapshot(customerId: string): Promise<SnapshotData> {
+export async function fetchLatestSnapshot(
+  customerId: string,
+): Promise<SnapshotData> {
   const res = await fetch(
     `${BASE}/api/resolve/snapshot?customerId=${encodeURIComponent(customerId)}`,
     { credentials: 'include' },
