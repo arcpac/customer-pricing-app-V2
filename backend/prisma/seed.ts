@@ -1,4 +1,4 @@
-import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaClient, Role } from '../src/generated/prisma/client.js';
 import { computeAdjustedPrice } from '../src/utils/pricing.js';
 import bcrypt from 'bcryptjs';
 
@@ -21,14 +21,14 @@ async function main() {
     data: {
       email: 'admin@email.com',
       passwordHash: await bcrypt.hash('admin123', 10),
-      role: 'SUPER_ADMIN',
+      role: Role.SUPER_ADMIN
     },
   });
   await prisma.user.create({
     data: {
       email: 'useradmin@email.com',
       passwordHash: await bcrypt.hash('useradmin123', 10),
-      role: 'ADMIN',
+      role: Role.ADMIN,
     },
   });
 
@@ -197,7 +197,7 @@ async function main() {
   });
 
   console.log(
-    'Seeded: 1 admin user, 6 customers, 2 groups, 2 memberships, 5 products, 3 profiles',
+    'Seeded: 2 users, 6 customers, 2 groups, 2 memberships, 5 products, 3 profiles',
   );
 }
 
