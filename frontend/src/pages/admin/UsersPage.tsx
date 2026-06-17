@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
 import type { Role } from '@/types';
@@ -21,7 +21,6 @@ import {
 export function UsersPage() {
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviting, setInviting] = useState(false);
 
   const { data: users = [], isLoading: loading } = useQuery({
     queryKey: ['users'],
@@ -29,40 +28,33 @@ export function UsersPage() {
     staleTime: STALE_MS,
   });
 
-  async function handleInvite(e: React.FormEvent) {
-    e.preventDefault();
-    setInviting(true);
-    try {
-      await inviteUser(inviteEmail);
-      toast.success(`Invite sent to ${inviteEmail}`);
+  const inviteMutation = useMutation({
+    mutationFn: inviteUser,
+    onSuccess: (_, email) => {
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(`Invite sent to ${email}`);
       setInviteEmail('');
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
-    } catch {
-      toast.error('Failed to send invite');
-    } finally {
-      setInviting(false);
-    }
-  }
+    },
+    onError: () => toast.error('Failed to send invite'),
+  });
 
-  async function handleRoleChange(id: string, role: Role) {
-    try {
-      await updateUserRole(id, role);
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
+  const roleChangeMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: Role }) => updateUserRole(id, role),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('Role updated');
-    } catch {
-      toast.error('Failed to update role');
-    }
-  }
+    },
+    onError: () => toast.error('Failed to update role'),
+  });
 
-  async function handleDelete(id: string) {
-    try {
-      await deleteUser(id);
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('User deleted');
-    } catch {
-      toast.error('Failed to delete user');
-    }
-  }
+    },
+    onError: () => toast.error('Failed to delete user'),
+  });
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
@@ -88,7 +80,7 @@ export function UsersPage() {
                 <TableCell>
                   <select
                     value={u.role}
-                    onChange={(e) => void handleRoleChange(u.id, e.target.value as Role)}
+                    onChange={(e) => roleChangeMutation.mutate({ id: u.id, role: e.target.value as Role })}
                     className="text-sm border rounded px-2 py-1 bg-background"
                   >
                     {Object.entries(ROLE_LABELS).map(([value, label]) => (<option key={value} value={value}>{label}</option>))}
@@ -101,7 +93,8 @@ export function UsersPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => void handleDelete(u.id)}
+                    disabled={deleteMutation.isPending}
+                    onClick={() => deleteMutation.mutate(u.id)}
                   >
                     <Trash2 size={14} className="text-destructive" />
                   </Button>
@@ -114,7 +107,7 @@ export function UsersPage() {
 
       <div className="rounded-lg border bg-card px-4 py-4">
         <h2 className="text-sm font-semibold mb-3">Invite user</h2>
-        <form onSubmit={(e) => void handleInvite(e)} className="flex gap-2 max-w-sm">
+        <form onSubmit={(e) => { e.preventDefault(); inviteMutation.mutate(inviteEmail); }} className="flex gap-2 max-w-sm">
           <Input
             type="email"
             placeholder="email@example.com"
@@ -122,8 +115,8 @@ export function UsersPage() {
             onChange={(e) => setInviteEmail(e.target.value)}
             required
           />
-          <Button type="submit" disabled={inviting}>
-            {inviting ? 'Sending…' : 'Send invite'}
+          <Button type="submit" disabled={inviteMutation.isPending}>
+            {inviteMutation.isPending ? 'Sending…' : 'Send invite'}
           </Button>
         </form>
       </div>

@@ -10,6 +10,14 @@ export async function getPricingProfiles(): Promise<PricingProfile[]> {
   return res.json() as Promise<PricingProfile[]>;
 }
 
+export async function deletePricingProfile(id: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/pricing-profiles/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to delete profile');
+}
+
 export async function savePricingProfile(
   payload: PricingProfilePayload,
 ): Promise<PricingProfile> {
