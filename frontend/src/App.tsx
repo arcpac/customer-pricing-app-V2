@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -15,9 +15,8 @@ import { UsersPage } from '@/pages/admin/UsersPage';
 import { ProductsManagePage } from '@/pages/admin/ProductsManagePage';
 import { CustomersManagePage } from '@/pages/admin/CustomersManagePage';
 import { CustomerGroupsManagePage } from '@/pages/admin/CustomerGroupsManagePage';
-import { checkAuth, logout } from '@/api/auth';
 import { Button } from '@/components/ui/button';
-import type { Role } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 
 const PAGE_TO_PATH: Record<Page, string> = {
   pricing: '/',
@@ -50,19 +49,11 @@ function App() {
   const { pathname } = useLocation();
   const isResolvedDetail = pathname.startsWith('/resolved-prices/');
   const page: Page = PATH_TO_PAGE[pathname] ?? (isResolvedDetail ? 'resolved-prices' : 'pricing');
-  const [role, setRole] = useState<Role | null>(null);
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const { user, isAuthenticated, isLoading, init, logout } = useAuthStore();
   const tokenParams = getTokenParams();
 
   useEffect(() => {
-    checkAuth().then((result) => {
-      if (result) {
-        setRole(result.role);
-        setAuthed(true);
-      } else {
-        setAuthed(false);
-      }
-    });
+    void init();
   }, []);
 
   if (tokenParams) {
@@ -80,34 +71,23 @@ function App() {
     );
   }
 
-  if (authed === null) return null;
+  if (isLoading) return null;
 
-  if (!authed) {
+  if (!isAuthenticated) {
     return (
       <>
-        <LoginPage
-          onLogin={(newRole: Role) => {
-            setRole(newRole);
-            setAuthed(true);
-          }}
-        />
+        <LoginPage />
         <Toaster />
       </>
     );
   }
 
-  async function handleLogout() {
-    await logout();
-    setAuthed(false);
-    setRole(null);
-  }
-
   return (
     <div className="flex h-screen bg-slate-50 text-foreground">
-      <Sidebar activePage={page} onNavigate={(p) => navigate(PAGE_TO_PATH[p])} role={role!} />
+      <Sidebar activePage={page} onNavigate={(p) => navigate(PAGE_TO_PATH[p])} role={user!.role} />
       <main className="flex-1 ml-56 overflow-auto p-6">
         <div className="mb-4 flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => void handleLogout()}>
+          <Button variant="outline" size="sm" onClick={() => void logout()}>
             Logout
           </Button>
         </div>

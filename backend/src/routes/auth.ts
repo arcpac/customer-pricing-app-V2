@@ -28,7 +28,6 @@ router.post('/login', async (req, res) => {
     res.status(401).json({ error: 'invalid credentials' });
     return;
   }
-  console.log('Jwt: ', process.env.JWT_SECRET);
 
   const token = jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
@@ -38,7 +37,7 @@ router.post('/login', async (req, res) => {
     },
   );
   res.cookie('token', token, COOKIE_OPTS);
-  res.json({ email: user.email, role: user.role });
+  res.json({ userId: user.id, email: user.email, role: user.role });
 });
 
 router.post('/logout', (_req, res) => {
