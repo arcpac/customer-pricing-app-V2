@@ -3,36 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import type { Role } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 
-const BASE = import.meta.env.VITE_API_URL ?? '';
-
-interface Props {
-  onLogin: (role: Role) => void;
-}
-
-export function LoginPage({ onLogin }: Props) {
+export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { login } = useAuthStore();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? 'Login failed');
-      }
-      const data = (await res.json()) as { role: Role };
-      onLogin(data.role);
+      await login(email, password);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Login failed');
     } finally {
