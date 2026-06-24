@@ -13,9 +13,17 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getCustomers } from '@/api/customers';
 import { getProducts } from '@/api/products';
-import { resolvePriceBatch, saveResolvedPrices, saveSnapshot } from '@/api/resolve';
+import { resolvePriceBatch, saveResolvedPrices, saveSnapshot, checkS3Health } from '@/api/resolve';
 import type { BatchResolveItem } from '@/api/resolve';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const STALE_MS = 3 * 60 * 1000;
 
@@ -38,6 +46,7 @@ export function ResolvePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [s3Down, setS3Down] = useState(false);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -68,6 +77,8 @@ export function ResolvePage() {
   };
 
   const handleResolve = async () => {
+    const s3Ok = await checkS3Health();
+    if (!s3Ok) { setS3Down(true); return; }
     setLoading(true);
     setError(null);
     setResults(null);
@@ -100,6 +111,20 @@ export function ResolvePage() {
   const canResolve = customerId !== '' && selectedIds.size > 0;
 
   return (
+    <>
+    <Dialog open={s3Down} onOpenChange={setS3Down}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>S3 Unavailable</DialogTitle>
+          <DialogDescription>
+            Cannot connect to storage. Resolve is disabled until the connection is restored.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button onClick={() => setS3Down(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <div className="space-y-6">
       <div>
         <p className="text-xs text-muted-foreground">Pages / Create pricing</p>
@@ -267,5 +292,6 @@ export function ResolvePage() {
         </div>
       )}
     </div>
+    </>
   );
 }
