@@ -33,6 +33,15 @@ export interface BatchResolveItem {
   adjustmentValue?: number;
 }
 
+export async function checkS3Health(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/api/health/s3`, { credentials: 'include' });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function resolvePrice(
   customerId: string,
   productId: string,

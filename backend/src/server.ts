@@ -13,6 +13,7 @@ import usersRouter from './routes/users.js';
 import inviteRouter from './routes/invite.js';
 import resetPasswordRouter from './routes/resetPassword.js';
 import { requireAuth } from './middleware/auth.js';
+import { checkS3Connection } from './lib/s3.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -22,6 +23,11 @@ app.use(cookieParser());
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
+});
+
+app.get('/api/health/s3', async (_req, res) => {
+  const ok = await checkS3Connection();
+  res.status(ok ? 200 : 503).json({ ok });
 });
 
 app.use('/api/auth', authRouter);
