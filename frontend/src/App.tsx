@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { Sidebar } from '@/components/layout/Sidebar';
