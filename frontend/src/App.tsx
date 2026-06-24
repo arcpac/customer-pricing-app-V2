@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -17,9 +17,11 @@ import { CustomersManagePage } from '@/pages/admin/CustomersManagePage';
 import { CustomerGroupsManagePage } from '@/pages/admin/CustomerGroupsManagePage';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
+import ReactCorePage from './pages/ReactCorePage';
 
 const PAGE_TO_PATH: Record<Page, string> = {
   pricing: '/',
+  reacttest: '/reacttest',
   resolve: '/resolve',
   profiles: '/profiles',
   memberships: '/memberships',
@@ -74,6 +76,15 @@ function App() {
   if (isLoading) return null;
 
   if (!isAuthenticated) {
+    if (page === 'reacttest') {
+      return (
+        <>
+          <ReactCorePage />
+        </>
+      )
+    }
+
+
     return (
       <>
         <LoginPage />

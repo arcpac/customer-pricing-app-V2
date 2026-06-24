@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type { Role } from '@/types';
 
 export type Page =
+  | 'reacttest'
   | 'pricing'
   | 'resolve'
   | 'profiles'
