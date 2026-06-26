@@ -91,7 +91,6 @@ export function resolvePrice(
       profileCoversProduct(p, product) &&
       p.items.some((i) => i.productId === product.id),
   );
-  console.log('matching: ', matching);
 
   if (matching.length === 0) {
     return {
@@ -109,7 +108,6 @@ export function resolvePrice(
         new Date(a.profile.createdAt).getTime()
       );
     });
-  console.log('Scored: ', scored);
 
   const { profile: winner, score } = scored[0]!;
   const item = winner.items.find((i) => i.productId === product.id)!;

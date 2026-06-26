@@ -22,6 +22,7 @@ export async function sendWithRetry(
     resolvedCount: number;
     totalCount: number;
     timestamp: string;
+    previousSnapshotKey: string | null;
   },
   maxAttempts = 3,
 ): Promise<void> {

@@ -145,7 +145,14 @@ router.post('/save', async (req: Request, res: Response) => {
     return;
   }
 
-  const data = (rawResults as { productId: string; resolvedPrice: number; sourceProfileId?: string; matchScore?: number }[]).map((r) => ({
+  const data = (
+    rawResults as {
+      productId: string;
+      resolvedPrice: number;
+      sourceProfileId?: string;
+      matchScore?: number;
+    }[]
+  ).map((r) => ({
     customerId,
     productId: r.productId,
     resolvedPrice: r.resolvedPrice,
@@ -174,7 +181,13 @@ router.get('/history', async (req: Request, res: Response) => {
     return;
   }
 
-  const profileIds = [...new Set(logs.map((l) => l.sourceProfileId).filter((id): id is string => id != null))];
+  const profileIds = [
+    ...new Set(
+      logs
+        .map((l) => l.sourceProfileId)
+        .filter((id): id is string => id != null),
+    ),
+  ];
   const productIds = [...new Set(logs.map((l) => l.productId))];
 
   const [profiles, products] = await Promise.all([
@@ -193,7 +206,9 @@ router.get('/history', async (req: Request, res: Response) => {
   const now = new Date();
 
   const enriched = logs.map((log) => {
-    const profile = log.sourceProfileId ? profileMap.get(log.sourceProfileId) : null;
+    const profile = log.sourceProfileId
+      ? profileMap.get(log.sourceProfileId)
+      : null;
     const product = productMap.get(log.productId);
     return {
       id: log.id,
@@ -204,7 +219,10 @@ router.get('/history', async (req: Request, res: Response) => {
       sourceProfileId: log.sourceProfileId,
       sourceProfileName: profile?.name ?? null,
       matchScore: log.matchScore,
-      profileExpired: profile != null && profile.effectiveTo != null && profile.effectiveTo < now,
+      profileExpired:
+        profile != null &&
+        profile.effectiveTo != null &&
+        profile.effectiveTo < now,
       createdAt: log.createdAt.toISOString(),
     };
   });
@@ -214,7 +232,10 @@ router.get('/history', async (req: Request, res: Response) => {
 
 router.get('/snapshot', async (req: Request, res: Response) => {
   const { customerId } = req.query as Record<string, string | undefined>;
-  if (!customerId) { res.status(400).json({ error: 'customerId required' }); return; }
+  if (!customerId) {
+    res.status(400).json({ error: 'customerId required' });
+    return;
+  }
   const latestBatch = await prisma.resolvedBatch.findFirst({
     where: { customerId },
     orderBy: { createdAt: 'desc' },
@@ -240,20 +261,40 @@ router.post('/snapshot', async (req: Request, res: Response) => {
     }[];
   };
 
-  if (!customerId) { res.status(400).json({ error: 'customerId required' }); return; }
-  if (!Array.isArray(productIds) || !productIds.length) { res.status(400).json({ error: 'productIds required' }); return; }
-  if (!Array.isArray(results) || !results.length) { res.status(400).json({ error: 'results required' }); return; }
+  if (!customerId) {
+    res.status(400).json({ error: 'customerId required' });
+    return;
+  }
+  if (!Array.isArray(productIds) || !productIds.length) {
+    res.status(400).json({ error: 'productIds required' });
+    return;
+  }
+  if (!Array.isArray(results) || !results.length) {
+    res.status(400).json({ error: 'results required' });
+    return;
+  }
 
+  const prevBatch = await prisma.resolvedBatch.findFirst({
+    where: { customerId },
+    orderBy: { createdAt: 'desc' },
+    select: { s3Key: true },
+  });
+
+  // parse s3Key
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
   const key = `resolved-batch/${customerId}/${createdAt}-${id}.json`;
 
-  const resolvedCount = results.filter(r => r.resolvedPrice !== null).length;
+  // other attr
+  const resolvedCount = results.filter((r) => r.resolvedPrice !== null).length;
   const totalCount = productIds.length;
-
   const batch = { id, customerId, createdAt, productIds, results };
+
+  // save to s3 and db
   await putJson(key, batch);
-  await prisma.resolvedBatch.create({ data: { id, customerId, s3Key: key, resolvedCount, totalCount } });
+  await prisma.resolvedBatch.create({
+    data: { id, customerId, s3Key: key, resolvedCount, totalCount },
+  });
 
   res.status(201).json({ id, s3Key: key, createdAt });
 
@@ -261,42 +302,96 @@ router.post('/snapshot', async (req: Request, res: Response) => {
     const connected = await checkSqsConnection();
     if (!connected) {
       console.error('[sqs] connection check failed, skipping send');
-      await prisma.resolvedBatch.update({ where: { id }, data: { sqsStatus: 'failed' } });
+      await prisma.resolvedBatch.update({
+        where: { id },
+        data: { sqsStatus: 'failed' },
+      });
       return;
     }
     try {
-      await sendWithRetry({ batchId: id, customerId, s3Key: key, resolvedCount, totalCount, timestamp: createdAt });
-      await prisma.resolvedBatch.update({ where: { id }, data: { sqsStatus: 'sent', sqsSentAt: new Date() } });
+      await sendWithRetry({
+        batchId: id,
+        customerId,
+        s3Key: key,
+        resolvedCount,
+        totalCount,
+        timestamp: createdAt,
+        previousSnapshotKey: prevBatch?.s3Key ?? null,
+      });
+      await prisma.resolvedBatch.update({
+        where: { id },
+        data: { sqsStatus: 'sent', sqsSentAt: new Date() },
+      });
     } catch (err) {
       console.error('[sqs] all retries exhausted:', err);
-      await prisma.resolvedBatch.update({ where: { id }, data: { sqsStatus: 'failed' } });
+      await prisma.resolvedBatch.update({
+        where: { id },
+        data: { sqsStatus: 'failed' },
+      });
     }
   })();
 });
 
 router.get('/snapshot/:id/sqs-status', async (req: Request, res: Response) => {
-  const batch = await prisma.resolvedBatch.findUnique({ where: { id: req.params.id as string } });
-  if (!batch) { res.status(404).json({ error: 'Not found' }); return; }
+  const batch = await prisma.resolvedBatch.findUnique({
+    where: { id: req.params.id as string },
+  });
+  if (!batch) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
   res.json({ sqsStatus: batch.sqsStatus, sqsSentAt: batch.sqsSentAt });
 });
 
 router.post('/snapshot/:id/notify', async (req: Request, res: Response) => {
-  const batch = await prisma.resolvedBatch.findUnique({ where: { id: req.params.id as string } });
-  if (!batch) { res.status(404).json({ error: 'Not found' }); return; }
+  const batch = await prisma.resolvedBatch.findUnique({
+    where: { id: req.params.id as string },
+  });
+  if (!batch) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
 
-  const connected = await checkSqsConnection();
+  const [connected, prevBatch] = await Promise.all([
+    checkSqsConnection(),
+    prisma.resolvedBatch.findFirst({
+      where: {
+        customerId: batch.customerId,
+        createdAt: { lt: batch.createdAt },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { s3Key: true },
+    }),
+  ]);
   if (!connected) {
-    await prisma.resolvedBatch.update({ where: { id: batch.id }, data: { sqsStatus: 'failed' } });
+    await prisma.resolvedBatch.update({
+      where: { id: batch.id },
+      data: { sqsStatus: 'failed' },
+    });
     res.status(503).json({ error: 'SQS unavailable' });
     return;
   }
   try {
-    await sendWithRetry({ batchId: batch.id, customerId: batch.customerId, s3Key: batch.s3Key, resolvedCount: batch.resolvedCount, totalCount: batch.totalCount, timestamp: batch.createdAt.toISOString() });
-    await prisma.resolvedBatch.update({ where: { id: batch.id }, data: { sqsStatus: 'sent', sqsSentAt: new Date() } });
+    await sendWithRetry({
+      batchId: batch.id,
+      customerId: batch.customerId,
+      s3Key: batch.s3Key,
+      resolvedCount: batch.resolvedCount,
+      totalCount: batch.totalCount,
+      timestamp: batch.createdAt.toISOString(),
+      previousSnapshotKey: prevBatch?.s3Key ?? null,
+    });
+    await prisma.resolvedBatch.update({
+      where: { id: batch.id },
+      data: { sqsStatus: 'sent', sqsSentAt: new Date() },
+    });
     res.json({ sqsStatus: 'sent' });
   } catch (err) {
     console.error('[sqs] send failed after retries:', err);
-    await prisma.resolvedBatch.update({ where: { id: batch.id }, data: { sqsStatus: 'failed' } });
+    await prisma.resolvedBatch.update({
+      where: { id: batch.id },
+      data: { sqsStatus: 'failed' },
+    });
     res.status(500).json({ error: 'Send failed after retries' });
   }
 });

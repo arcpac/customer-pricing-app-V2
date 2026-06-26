@@ -1,20 +1,17 @@
 import 'dotenv/config';
-import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
-
-const sqs = new SQSClient({ region: process.env.AWS_REGION ?? 'ap-southeast-2' });
-const QueueUrl = process.env.SQS_QUEUE_URL!;
+import { receiveMessages, deleteMessage } from './lib/sqs.js';
+import { processMessage } from './lib/processor.js';
+import type { SQSPayload } from './types.js';
 
 async function poll() {
-  console.log('[ai-service] polling', QueueUrl);
+  console.log('[ai-service] waiting for messages...');
   while (true) {
-    const res = await sqs.send(new ReceiveMessageCommand({
-      QueueUrl,
-      MaxNumberOfMessages: 10,
-      WaitTimeSeconds: 20,
-    }));
-    for (const msg of res.Messages ?? []) {
-      console.log('[ai-service] payload received:', msg.Body);
-      await sqs.send(new DeleteMessageCommand({ QueueUrl, ReceiptHandle: msg.ReceiptHandle! }));
+    const messages = await receiveMessages();
+    for (const msg of messages) {
+      console.log('[ai-service] message received');
+      const payload = JSON.parse(msg.Body!) as SQSPayload;
+      await processMessage(payload);
+      await deleteMessage(msg.ReceiptHandle!);
       console.log('[ai-service] message deleted');
     }
   }

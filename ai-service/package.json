@@ -6,6 +6,7 @@
     "start": "npx tsx index.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
     "@aws-sdk/client-sqs": "^3",
     "dotenv": "^16.6.1"
   },
