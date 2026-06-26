@@ -9,6 +9,7 @@ import {
 } from '../lib/mappers.js';
 import { resolvePrice } from '../utils/resolver.js';
 import { putJson, getJson } from '../lib/s3.js';
+import { checkSqsConnection, sendWithRetry } from '../lib/sqs.js';
 
 const router = Router();
 
@@ -131,7 +132,7 @@ router.post('/batch', async (req: Request, res: Response) => {
 
 router.post('/save', async (req: Request, res: Response) => {
   const { customerId, results: rawResults } = req.body as {
-    customerId: unknown;
+    customerId: string;
     results: unknown;
   };
 
@@ -247,11 +248,57 @@ router.post('/snapshot', async (req: Request, res: Response) => {
   const createdAt = new Date().toISOString();
   const key = `resolved-batch/${customerId}/${createdAt}-${id}.json`;
 
+  const resolvedCount = results.filter(r => r.resolvedPrice !== null).length;
+  const totalCount = productIds.length;
+
   const batch = { id, customerId, createdAt, productIds, results };
   await putJson(key, batch);
-  await prisma.resolvedBatch.create({ data: { id, customerId, s3Key: key } });
+  await prisma.resolvedBatch.create({ data: { id, customerId, s3Key: key, resolvedCount, totalCount } });
 
   res.status(201).json({ id, s3Key: key, createdAt });
+
+  (async () => {
+    const connected = await checkSqsConnection();
+    if (!connected) {
+      console.error('[sqs] connection check failed, skipping send');
+      await prisma.resolvedBatch.update({ where: { id }, data: { sqsStatus: 'failed' } });
+      return;
+    }
+    try {
+      await sendWithRetry({ batchId: id, customerId, s3Key: key, resolvedCount, totalCount, timestamp: createdAt });
+      await prisma.resolvedBatch.update({ where: { id }, data: { sqsStatus: 'sent', sqsSentAt: new Date() } });
+    } catch (err) {
+      console.error('[sqs] all retries exhausted:', err);
+      await prisma.resolvedBatch.update({ where: { id }, data: { sqsStatus: 'failed' } });
+    }
+  })();
+});
+
+router.get('/snapshot/:id/sqs-status', async (req: Request, res: Response) => {
+  const batch = await prisma.resolvedBatch.findUnique({ where: { id: req.params.id as string } });
+  if (!batch) { res.status(404).json({ error: 'Not found' }); return; }
+  res.json({ sqsStatus: batch.sqsStatus, sqsSentAt: batch.sqsSentAt });
+});
+
+router.post('/snapshot/:id/notify', async (req: Request, res: Response) => {
+  const batch = await prisma.resolvedBatch.findUnique({ where: { id: req.params.id as string } });
+  if (!batch) { res.status(404).json({ error: 'Not found' }); return; }
+
+  const connected = await checkSqsConnection();
+  if (!connected) {
+    await prisma.resolvedBatch.update({ where: { id: batch.id }, data: { sqsStatus: 'failed' } });
+    res.status(503).json({ error: 'SQS unavailable' });
+    return;
+  }
+  try {
+    await sendWithRetry({ batchId: batch.id, customerId: batch.customerId, s3Key: batch.s3Key, resolvedCount: batch.resolvedCount, totalCount: batch.totalCount, timestamp: batch.createdAt.toISOString() });
+    await prisma.resolvedBatch.update({ where: { id: batch.id }, data: { sqsStatus: 'sent', sqsSentAt: new Date() } });
+    res.json({ sqsStatus: 'sent' });
+  } catch (err) {
+    console.error('[sqs] send failed after retries:', err);
+    await prisma.resolvedBatch.update({ where: { id: batch.id }, data: { sqsStatus: 'failed' } });
+    res.status(500).json({ error: 'Send failed after retries' });
+  }
 });
 
 export default router;

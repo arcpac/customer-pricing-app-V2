@@ -1,4 +1,9 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  HeadBucketCommand,
+} from '@aws-sdk/client-s3';
 
 const s3 = new S3Client({ region: 'ap-southeast-2' });
 const BUCKET = 's3-resolved-pricing';

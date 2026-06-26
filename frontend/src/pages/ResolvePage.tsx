@@ -78,6 +78,7 @@ export function ResolvePage() {
 
   const handleResolve = async () => {
     const s3Ok = await checkS3Health();
+    console.log(s3Ok)
     if (!s3Ok) { setS3Down(true); return; }
     setLoading(true);
     setError(null);
