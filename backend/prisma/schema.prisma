@@ -139,10 +139,14 @@ model ProfileAuditLog {
 }
 
 model ResolvedBatch {
-  id         String   @id @default(uuid())
-  customerId String
-  s3Key      String
-  createdAt  DateTime @default(now())
+  id            String    @id @default(uuid())
+  customerId    String
+  s3Key         String
+  sqsStatus     String    @default("pending")
+  sqsSentAt     DateTime?
+  resolvedCount Int
+  totalCount    Int
+  createdAt     DateTime  @default(now())
 
   @@index([customerId, createdAt])
   @@map("resolved_batches")
